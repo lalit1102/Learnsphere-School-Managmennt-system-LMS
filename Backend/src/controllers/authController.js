@@ -65,7 +65,6 @@ export const login = async (req, res) => {
         message: "password mismatch",
       });
     }
-
     // check approval
     if (user.status !== "approved") {
       return res.status(403).json({
@@ -73,12 +72,13 @@ export const login = async (req, res) => {
         message: "wait for admin approval",
       });
     }
-
+    const { password: pass, ...userData } = user._doc;
+    
     // success
     return res.status(200).json({
       success: true,
       message: "user login successful",
-      user,
+      user : userData ,
     });
   } catch (error) {
     console.log(error);

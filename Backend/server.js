@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors"
 import connectDB from "./src/config/db.js";
 import authrouter from "./src/routes/authRoutes.js";
+import adminRouter from "./src/routes/adminRoutes.js";
 
 //read env file
 dotenv.config(); 
@@ -35,6 +36,7 @@ app.get("/", (req, res) => {
 
 // routes
 app.use("/api/auth",authrouter)
+app.use("/api/admin",adminRouter)
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT,()=>{

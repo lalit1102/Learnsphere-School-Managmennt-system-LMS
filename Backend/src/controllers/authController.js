@@ -1,8 +1,9 @@
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken"
 
 export const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password,role} = req.body;
 
   try {
     // check user exists
@@ -23,6 +24,7 @@ export const register = async (req, res) => {
       name,
       email,
       password: hashPassword,
+      role
     });
 
     // remove password
@@ -72,6 +74,24 @@ export const login = async (req, res) => {
         message: "wait for admin approval",
       });
     }
+
+    // jwt token generate
+
+    const token = jwt.sign(
+      {id:user._id,role:user.role},
+      process.env.JWT_SECRET,
+      {expiresIn:"7d"}
+    )
+
+    // cookie set
+
+    res.cookie("token",token,{
+      httpOnly:true,
+      secure:false,
+      sameSite:"lax",
+      maxAge:7*24*60*60*1000
+    })
+
     const { password: pass, ...userData } = user._doc;
     
     // success
@@ -80,6 +100,7 @@ export const login = async (req, res) => {
       message: "user login successful",
       user : userData ,
     });
+
   } catch (error) {
     console.log(error);
     return res.status(500).json({

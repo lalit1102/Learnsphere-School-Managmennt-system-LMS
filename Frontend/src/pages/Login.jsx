@@ -1,42 +1,66 @@
-import { useState, useContext } from "react";
-import  AuthContext  from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useState, useContext } from "react"
+import { useNavigate } from "react-router-dom"
+import API from "@/services/api"
+import AuthContext from "@/context/AuthContext"
+import { Button } from "@/ui/Button"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/ui/Card"
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const { loginUser } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const { setUser } = useContext(AuthContext)
+  const navigate = useNavigate()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    const data = await loginUser(email, password);
-    if (data.success) {
-      if (data.user.role === "admin") navigate("/admin/dashboard");
-      else navigate("/student/dashboard");
-    } else alert(data.message);
-  };
+    e.preventDefault()
+    try {
+      const { data } = await API.post("/auth/login", { email, password })
+      if (data.success) {
+        setUser(data.user)
+        navigate("/admin")
+      } else {
+        alert(data.message)
+      }
+    } catch (err) {
+      console.error(err)
+      alert("Server error")
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow w-96">
-        <h1 className="text-2xl font-bold mb-4">Login</h1>
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-2 mb-4 border rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-2 mb-4 border rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button className="w-full bg-blue-500 text-white p-2 rounded">Login</button>
-      </form>
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Admin Login</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input input-bordered w-full"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input input-bordered w-full"
+              required
+              autoComplete="current-password"
+            />
+            <Button type="submit">Login</Button>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <p className="text-sm text-gray-500 text-center">
+            Enter your credentials to access the admin dashboard.
+          </p>
+        </CardFooter>
+      </Card>
     </div>
-  );
+  )
 }

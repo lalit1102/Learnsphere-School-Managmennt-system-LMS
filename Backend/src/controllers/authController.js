@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken"
 
 export const register = async (req, res) => {
+  console.log("req,,,,,,,",req.body)
   const { name, email, password,role} = req.body;
 
   try {
@@ -101,6 +102,45 @@ export const login = async (req, res) => {
       user : userData ,
     });
 
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "server error",
+    });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "user not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "server error",
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie("token");
+    return res.status(200).json({
+      success: true,
+      message: "logged out effectively",
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({

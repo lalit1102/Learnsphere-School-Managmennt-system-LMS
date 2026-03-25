@@ -1,7 +1,8 @@
+import images from "@/assets/assets";
 import UniversalUserForm from "@/components/auth/UniversalUserForm";
-import { useAuth } from "@/hooks/AuthProvider";
+import { useAuth } from "@/hooks/useAuth";
 import { School } from "lucide-react";
-import { Link, Navigate } from "react-router";
+import { Link, Navigate } from "react-router-dom";
 
 const Login = () => {
   const { user, loading } = useAuth();
@@ -16,7 +17,7 @@ const Login = () => {
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
               <School className="size-4" />
             </div>
-            Edunexus.
+            Learnsphere.
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">
@@ -27,7 +28,7 @@ const Login = () => {
       </div>
       <div className="bg-muted relative hidden lg:block">
         <img
-          src="https://images.unsplash.com/photo-1610962381137-50ef93055125"
+          src={images.loginimage}
           alt="Image"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />

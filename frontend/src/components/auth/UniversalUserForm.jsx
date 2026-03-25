@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { FieldGroup } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { CustomInput } from "@/components/global/CustomInput";
-import api from "@/lib/api"; // ✅ default import
+import { api } from "@/lib/api";
 import { CustomSelect } from "@/components/global/CustomSelect";
 import { useEffect, useState } from "react";
 import { CustomMultiSelect } from "@/components/global/CustomMultiSelect";

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/AuthProvider";
+import { useAuth } from "@/hooks/useAuth";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";

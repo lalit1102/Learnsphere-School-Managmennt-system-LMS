@@ -1,7 +1,7 @@
 import UniversalUserForm from "@/components/auth/UniversalUserForm";
-import { useAuth } from "@/hooks/AuthProvider";
+import { useAuth } from "@/hooks/useAuth";
 import { School } from "lucide-react";
-import { Link, Navigate } from "react-router";
+import { Link, Navigate } from "react-router-dom";
 
 const Register = () => {
   const { user, loading } = useAuth();

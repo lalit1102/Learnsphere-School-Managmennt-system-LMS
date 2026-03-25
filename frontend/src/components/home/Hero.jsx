@@ -1,3 +1,4 @@
+import images from "@/assets/assets";
 import { ArrowRight, ChevronRight, Play } from "lucide-react";
 
 const Hero = () => {
@@ -18,7 +19,9 @@ const Hero = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#3ecf8e] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#3ecf8e]"></span>
               </span>
-              <span>2025 Admissions are now open</span>
+              <span>
+                {new Date().getFullYear()} Admissions are now open
+              </span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 dark:text-white leading-tight">
@@ -27,7 +30,7 @@ const Hero = () => {
             </h1>
 
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-xl">
-              Edunexus is a premier technology-driven university designed for
+              Learnsphere is a premier technology-driven university designed for
               the next generation of innovators, engineers, and digital artists.
             </p>
 
@@ -69,8 +72,9 @@ const Hero = () => {
           <div className="relative">
             <div className="relative rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-2xl group">
               <img
-                src="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&q=80&w=1200"
-                alt="Edunexus Modern Campus"
+
+                src={images.school}
+                alt="Learnsphere Modern Campus"
                 className="w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 dark:from-[#121212] via-transparent to-transparent"></div>

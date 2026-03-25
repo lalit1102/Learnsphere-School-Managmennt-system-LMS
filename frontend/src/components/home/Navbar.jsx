@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Menu, X, GraduationCap } from "lucide-react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,7 +25,7 @@ const Navbar = () => {
               <GraduationCap className="text-black w-6 h-6" />
             </div>
             <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-              EDU<span className="text-[#3ecf8e]">NEXUS</span>
+              LEARN<span className="text-[#3ecf8e]">SPHERE</span>
             </span>
           </div>
 

@@ -1,10 +1,8 @@
-import {
-  GraduationCap,
-  Github,
-  Twitter,
-  Linkedin,
-  ArrowUp,
-} from "lucide-react";
+import images from "@/assets/assets";
+import { GraduationCap, ArrowUp } from "lucide-react";
+
+
+
 
 const Footer = () => {
   return (
@@ -17,7 +15,7 @@ const Footer = () => {
                 <GraduationCap className="text-black w-6 h-6" />
               </div>
               <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">
-                Edunexus
+                Learnsphere
               </span>
             </div>
             <p className="text-gray-600 dark:text-gray-500 leading-relaxed">
@@ -29,19 +27,22 @@ const Footer = () => {
                 href="#"
                 className="w-10 h-10 rounded-full bg-white dark:bg-[#1c1c1c] border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-[#3ecf8e] hover:text-black transition-all text-gray-500 dark:text-gray-400 shadow-sm"
               >
-                <Twitter className="w-5 h-5" />
+                {/* <Twitter className="w-5 h-5" /> */}
+                <img src={images.twitterIcon} alt="twitterIcon" className="w-5 h-5" />
               </a>
               <a
                 href="#"
                 className="w-10 h-10 rounded-full bg-white dark:bg-[#1c1c1c] border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-[#3ecf8e] hover:text-black transition-all text-gray-500 dark:text-gray-400 shadow-sm"
               >
-                <Linkedin className="w-5 h-5" />
+                {/* <GitHub className="w-5 h-5" /> */}
+                <img src={images.instagramIcon} alt="githubIcon" className="w-5 h-5" />
               </a>
               <a
                 href="#"
                 className="w-10 h-10 rounded-full bg-white dark:bg-[#1c1c1c] border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-[#3ecf8e] hover:text-black transition-all text-gray-500 dark:text-gray-400 shadow-sm"
               >
-                <Github className="w-5 h-5" />
+                {/* <LinkedInIcon className="w-5 h-5" /> */}
+                <img src={images.linkendinIcon} alt="linkendinIcon" className="w-5 h-5" />
               </a>
             </div>
           </div>

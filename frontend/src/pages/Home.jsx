@@ -53,7 +53,7 @@ const Home = () => {
             </h3>
             <div className="flex flex-col items-center">
               <img
-                src="https://picsum.photos/seed/edunexus-student/100/100"
+                src="https://picsum.photos/seed/learnsphere-student/100/100"
                 alt="Student"
                 className="w-20 h-20 rounded-full border-4 border-[#3ecf8e] mb-4 object-cover"
               />
@@ -76,7 +76,7 @@ const Home = () => {
                 Ready to Shape the Future?
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto">
-                Applications for the Fall 2025 semester are closing soon. Take
+                Applications for the Fall {new Date().getFullYear() + 1} semester are closing soon. Take
                 the first step towards a boundary-breaking career today.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">

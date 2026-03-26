@@ -4,6 +4,7 @@ import { GraduationCap, ArrowUp } from "lucide-react";
 
 
 
+
 const Footer = () => {
   return (
     <footer className="pt-20 pb-10 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300">
@@ -165,7 +166,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-gray-200 dark:border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500">
-          <p>© 2025 Edunexus University. All rights reserved.</p>
+          <p>{new Date().getFullYear()} Learnsphere. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a
               href="#"
@@ -192,6 +193,7 @@ const Footer = () => {
           >
             <ArrowUp className="w-5 h-5 group-hover:text-[#3ecf8e] text-gray-400" />
           </button>
+          
         </div>
       </div>
     </footer>

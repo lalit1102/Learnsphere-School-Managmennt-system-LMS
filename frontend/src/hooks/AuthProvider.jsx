@@ -2,19 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
+import { api } from "@/lib/api";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [year, setYear] = useState(null);
+  const [year] = useState({ year: "2024-2025" }); // Keep as persistent mock for now
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         setLoading(true);
-        // Mock user data (replace with API later)
-        const mockUser = { id: 1, name: "Test User", role: "admin" };
-        setUser(mockUser);
+        const { data } = await api.get("/auth/me");
+        if (data.success) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
       } catch (error) {
         console.error("Auth check failed:", error);
         setUser(null);
@@ -23,19 +27,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    const fetchYear = async () => {
-      try {
-        // Mock year data (replace with API later)
-        const mockYear = { year: "2025-2026" };
-        setYear(mockYear);
-      } catch (error) {
-        console.error("Year fetch failed:", error);
-        setYear(null);
-      }
-    };
-
     checkAuth();
-    fetchYear();
   }, []);
 
   return (

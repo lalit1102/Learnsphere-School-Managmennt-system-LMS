@@ -16,7 +16,7 @@ const Register = () => {
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
               <School className="size-4" />
             </div>
-            Edunexus.
+            Learnsphere.
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">

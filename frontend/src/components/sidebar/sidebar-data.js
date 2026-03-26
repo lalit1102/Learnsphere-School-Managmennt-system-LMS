@@ -22,7 +22,7 @@ export const sidebardata = {
       roles: ["admin", "teacher", "student", "parent"],
       items: [
         { title: "Dashboard", url: "/dashboard", roles: ["admin", "teacher", "student", "parent"] },
-        { title: "Activities Log", url: "/activities-log", roles: ["admin"] },
+        { title: "Activities Log", url: "/dashboard/activities-log", roles: ["admin"] },
       ],
     },
     {
@@ -31,10 +31,10 @@ export const sidebardata = {
       icon: School,
       roles: ["admin", "teacher", "student", "parent"],
       items: [
-        { title: "Classes", url: "/classes", roles: ["admin", "teacher"] },
-        { title: "Subjects", url: "/subjects", roles: ["admin", "teacher"] },
-        { title: "Timetable", url: "/timetable" },
-        { title: "Attendance", url: "/attendance" },
+        { title: "Classes", url: "/dashboard/classes", roles: ["admin", "teacher"] },
+        { title: "Subjects", url: "/dashboard/subjects", roles: ["admin", "teacher"] },
+        { title: "Timetable", url: "/dashboard/timetable" },
+        { title: "Attendance", url: "/dashboard/attendance" },
       ],
     },
     {
@@ -43,9 +43,9 @@ export const sidebardata = {
       icon: GraduationCap,
       roles: ["teacher", "student", "admin"],
       items: [
-        { title: "Assignments", url: "/lms/assignments" },
-        { title: "Exams", url: "/lms/exams" },
-        { title: "Study Materials", url: "/lms/materials" },
+        { title: "Assignments", url: "/dashboard/lms/assignments" },
+        { title: "Exams", url: "/dashboard/lms/exams" },
+        { title: "Study Materials", url: "/dashboard/lms/materials" },
       ],
     },
     {
@@ -54,10 +54,11 @@ export const sidebardata = {
       icon: Users,
       roles: ["admin", "teacher"],
       items: [
-        { title: "Students", url: "/users/students" },
-        { title: "Teachers", url: "/users/teachers", roles: ["admin"] },
-        { title: "Parents", url: "/users/parents", roles: ["admin"] },
-        { title: "Admins", url: "/users/admins", roles: ["admin"] },
+        { title: "Add User", url: "/dashboard/users/add", roles: ["admin", "teacher"] },
+        { title: "Students", url: "/dashboard/users/students" },
+        { title: "Teachers", url: "/dashboard/users/teachers", roles: ["admin"] },
+        { title: "Parents", url: "/dashboard/users/parents", roles: ["admin"] },
+        { title: "Admins", url: "/dashboard/users/admins", roles: ["admin"] },
       ],
     },
     {
@@ -66,9 +67,9 @@ export const sidebardata = {
       icon: Banknote,
       roles: ["admin"],
       items: [
-        { title: "Fee Collection", url: "/finance/fees" },
-        { title: "Expenses", url: "/finance/expenses" },
-        { title: "Salary", url: "/finance/salary" },
+        { title: "Fee Collection", url: "/dashboard/finance/fees" },
+        { title: "Expenses", url: "/dashboard/finance/expenses" },
+        { title: "Salary", url: "/dashboard/finance/salary" },
       ],
     },
     {
@@ -77,9 +78,9 @@ export const sidebardata = {
       icon: Settings2,
       roles: ["admin"],
       items: [
-        { title: "School Settings", url: "/settings/general" },
-        { title: "Academic Years", url: "/settings/academic-years" },
-        { title: "Roles & Permissions", url: "/settings/roles" },
+        { title: "School Settings", url: "/dashboard/settings/general" },
+        { title: "Academic Years", url: "/dashboard/settings/academic-years" },
+        { title: "Roles & Permissions", url: "/dashboard/settings/roles" },
       ],
     },
   ],

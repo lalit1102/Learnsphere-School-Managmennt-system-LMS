@@ -87,7 +87,7 @@ export default function UniversalUserForm({ type, initialData, onSuccess, role }
       }
     };
     fetchClasses();
-  }, []);
+  }, [type]);
 
   // fetch subjects
   useEffect(() => {
@@ -106,7 +106,7 @@ export default function UniversalUserForm({ type, initialData, onSuccess, role }
       }
     };
     fetchSubjects();
-  }, []);
+  }, [type]);
 
   // populate form for update
   useEffect(() => {
@@ -135,19 +135,19 @@ export default function UniversalUserForm({ type, initialData, onSuccess, role }
         ...data,
       };
       if (isLogin) {
-        const { data: user } = await api.post("/users/login", {
+        const { data: responseData } = await api.post("/auth/login", {
           email: data.email,
           password: data.password,
         });
-        toast.success("Logged in successfully");
+        toast.success(responseData.message || "Logged in successfully");
         window.location.href = "/dashboard";
       } else if (type === "create") {
-        await api.post("/users/register", payload);
-        toast.success("Account created successfully!");
+        const { data: responseData } = await api.post("/auth/register", payload);
+        toast.success(responseData.message || "Account created successfully!");
         if (onSuccess) onSuccess();
       } else if (type === "update" && initialData?._id) {
-        await api.put(`/users/update/${initialData._id}`, payload);
-        toast.success("User updated successfully");
+        const { data: responseData } = await api.put(`/users/update/${initialData._id}`, payload);
+        toast.success(responseData.message || "User updated successfully");
         if (onSuccess) onSuccess();
       }
     } catch (error) {

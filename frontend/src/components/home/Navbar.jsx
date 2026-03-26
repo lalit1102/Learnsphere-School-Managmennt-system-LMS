@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
+import ThemeToggleSimple from "./ThemeToggleSimple";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -55,6 +56,8 @@ const Navbar = () => {
             >
               AI Guide
             </a>
+              <ThemeToggleSimple />
+
             <button className="bg-[#3ecf8e] text-black px-5 py-2 rounded-md font-bold hover:bg-[#34b27b] transition-all transform hover:scale-105">
               Apply Now
             </button>

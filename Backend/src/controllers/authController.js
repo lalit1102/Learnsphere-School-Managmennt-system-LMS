@@ -111,7 +111,7 @@ export const login = async (req, res) => {
   }
 };
 
-export const getProfile = async (req, res) => {
+export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     if (!user) {
@@ -134,12 +134,86 @@ export const getProfile = async (req, res) => {
   }
 };
 
-export const logout = async (req, res) => {
+export const logoutUser = async (req, res) => {
   try {
     res.clearCookie("token");
     return res.status(200).json({
       success: true,
       message: "logged out effectively",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "server error",
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { name, email, role, status } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { name, email, role, status },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    return res.status(200).json({
+      success: true,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "server error",
+    });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "server error",
+    });
+  }
+};
+
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    return res.status(200).json({
+      success: true,
+      count: users.length,
+      users,
     });
   } catch (error) {
     console.log(error);

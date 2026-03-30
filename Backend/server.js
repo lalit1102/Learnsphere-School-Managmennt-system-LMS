@@ -12,6 +12,11 @@ import classRouter from "./src/routes/classRoutes.js";
 import LogsRouter from "./src/routes/activitieslog.js";
 import subjectRouter from "./src/routes/subjectRoutes.js";
 import timeRouter from "./src/routes/timeTabelRoutes.js";
+import examRouter from "./src/routes/examRoutes.js";
+import dashboardRouter from "./src/routes/dashboard.js";
+import { serve } from "inngest/express";
+import { inngest } from "./src/inngest/index.js";
+import { generateTimeTable, generateExam, handleExamSubmission } from "./src/inngest/functions.js";
 
 //read env file
 dotenv.config();
@@ -55,6 +60,15 @@ app.use("/api/academic-years", academicYearRouter)
 app.use("/api/classes", classRouter);
 app.use("/api/subjects", subjectRouter);
 app.use("/api/timetables", timeRouter)
+app.use("/api/exams", examRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use(
+  "/api/inngest",
+  serve({
+    client: inngest,
+    functions: [generateTimeTable, generateExam, handleExamSubmission],
+  })
+);
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {

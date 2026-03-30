@@ -1,5 +1,0 @@
-{
-  "message": "Server Error",
-  "error": "next is not a function",
-  "stack": "TypeError: next is not a function\n    at model.<anonymous> (file:///E:/MERN%20STACK/NODEJS/Learnsphere-School%20Managmennt%20system%20+%20LMS/Backend/src/models/user.js:37:3)\n    at async Kareem.execPre (E:\\MERN STACK\\NODEJS\\Learnsphere-School Managmennt system + LMS\\Backend\\node_modules\\kareem\\index.js:70:24)\n    at async model.$__save (E:\\MERN STACK\\NODEJS\\Learnsphere-School Managmennt system + LMS\\Backend\\node_modules\\mongoose\\lib\\model.js:394:5)\n    at async model.save (E:\\MERN STACK\\NODEJS\\Learnsphere-School Managmennt system + LMS\\Backend\\node_modules\\mongoose\\lib\\model.js:664:5)\n    at async model.create (E:\\MERN STACK\\NODEJS\\Learnsphere-School Managmennt system + LMS\\Backend\\node_modules\\mongoose\\lib\\model.js:2751:5)\n    at async register (file:///E:/MERN%20STACK/NODEJS/Learnsphere-School%20Managmennt%20system%20+%20LMS/Backend/src/controllers/userController.js:30:21)"
-}

@@ -8,6 +8,10 @@ import connectDB from "./src/config/db.js";
 
 import userRoutes from "./src/routes/userRoutes.js";
 import academicYearRouter from "./src/routes/academicYearRoutes.js";
+import classRouter from "./src/routes/classRoutes.js";
+import LogsRouter from "./src/routes/activitieslog.js";
+import subjectRouter from "./src/routes/subjectRoutes.js";
+import timeRouter from "./src/routes/timeTabelRoutes.js";
 
 //read env file
 dotenv.config();
@@ -45,8 +49,12 @@ app.get("/", (req, res) => {
 
 
 app.use("/api/users", userRoutes)
-
+app.use("/api/activities", LogsRouter);
 app.use("/api/academic-years", academicYearRouter)
+
+app.use("/api/classes", classRouter);
+app.use("/api/subjects", subjectRouter);
+app.use("/api/timetables", timeRouter)
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {

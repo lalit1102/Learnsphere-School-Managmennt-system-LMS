@@ -2,6 +2,7 @@ import express from "express"
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors"
+import morgan from "morgan"
 import connectDB from "./src/config/db.js";
 import authrouter from "./src/routes/authRoutes.js";
 import adminRouter from "./src/routes/adminRoutes.js";
@@ -22,6 +23,10 @@ app.use(express.json())  // parse the json body
 
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
 app.use(cookieParser()); // Middleware to parse cookies
+
+if(process.env.NODE_ENV === "development"){
+  app.use(morgan("dev"))
+}
 
 
 app.use(

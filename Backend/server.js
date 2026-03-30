@@ -4,12 +4,13 @@ import cookieParser from "cookie-parser";
 import cors from "cors"
 import morgan from "morgan"
 import connectDB from "./src/config/db.js";
-import authrouter from "./src/routes/authRoutes.js";
-import adminRouter from "./src/routes/adminRoutes.js";
-import userRouter from "./src/routes/userRoutes.js";
+
+
+import userRoutes from "./src/routes/userRoutes.js";
+import academicYearRouter from "./src/routes/academicYearRoutes.js";
 
 //read env file
-dotenv.config(); 
+dotenv.config();
 
 // express app create
 const app = express()
@@ -24,7 +25,7 @@ app.use(express.json())  // parse the json body
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
 app.use(cookieParser()); // Middleware to parse cookies
 
-if(process.env.NODE_ENV === "development"){
+if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"))
 }
 
@@ -41,11 +42,13 @@ app.get("/", (req, res) => {
 });
 
 // routes
-app.use("/api/auth",authrouter)
-app.use("/api/admin",adminRouter)
-app.use("/api/users",userRouter)
+
+
+app.use("/api/users", userRoutes)
+
+app.use("/api/academic-years", academicYearRouter)
 
 const PORT = process.env.PORT || 5000
-app.listen(PORT,()=>{
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })

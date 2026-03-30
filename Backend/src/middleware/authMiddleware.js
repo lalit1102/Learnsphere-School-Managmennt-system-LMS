@@ -1,76 +1,52 @@
+// middleware/authMiddleware.js
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 
+// Protect routes middleware
 export const protect = async (req, res, next) => {
-  try {
-    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET not defined");
+  let token;
+
+  // check for token in cookies
+  if (req.cookies && req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // attach user to request
+      req.user = await User.findById(decoded.userId).select("-password");
+
+      next();
+    } catch (error) {
+      console.error(error);
+      res.status(401).json({ message: "Not authorized, token failed" });
     }
-
-    const token = req.cookies.jwt;
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, token missing",
-      });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!decoded.userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token payload",
-      });
-    }
-
-    const user = await User.findById(decoded.userId)
-      .select("-password")
-      .lean();
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    console.log(error);
-
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        message: "Token expired",
-      });
-    }
-
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-    });
+  } else {
+    res.status(401).json({ message: "Not authorized, no token" });
   }
 };
 
+/**
+ * Accepts a list of allowed roles (e.g. ['admin', 'teacher'])
+ * usage: router.post('/route', protect, authorize(['admin']), controller)
+ */
 export const authorize = (roles = []) => {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized",
-      });
+      return res
+        .status(401)
+        .json({ message: "Not authorized, user not found" });
     }
 
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
-        success: false,
-        message: "User role not authorized",
+        message: `User role '${req.user.role}' is not authorized to access this route`,
       });
     }
 
+    // user has permission to proceed
     next();
   };
 };

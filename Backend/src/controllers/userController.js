@@ -1,11 +1,15 @@
 import User from "../models/user.js";
 import { generateToken } from "../utils/generateToken.js";
-import { logActivity } from "../utils/logActivity.js";
+import { logActivity } from "../utils/activitieslog.js";
 
 // @desc    Register a new user
 // @route   POST /api/users/register
 // @access  Private (Admin & Teacher)
+
+
+
 export const register = async (req, res) => {
+  console.log("REGISTER HIT");
   try {
     const {
       name,
@@ -42,21 +46,33 @@ export const register = async (req, res) => {
         });
       }
 
+      // Automatically log in the user after registration
+      // generateToken(newUser._id.toString(), res);
+
       return res.status(201).json({
         _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
         isActive: newUser.isActive,
+        studentClass: newUser.studentClass,
+        teacherSubject: newUser.teacherSubject,
         message: "User registered successfully",
       });
     }
 
     return res.status(400).json({ message: "Invalid user data" });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", error: error.message });
+    console.error(error);
+    return res.status(500).json({ message: "Server Error", error: error.message, stack: error.stack });
   }
 };
+
+
+
+
+
+
 
 // @desc    Login user & get token
 // @route   POST /api/users/login
@@ -69,6 +85,8 @@ export const login = async (req, res) => {
 
     if (user && (await user.matchPassword(password))) {
       generateToken(user._id.toString(), res);
+
+      // Do not return the hashed password
       return res.json(user);
     }
 
@@ -117,6 +135,8 @@ export const updateUser = async (req, res) => {
       email: updatedUser.email,
       role: updatedUser.role,
       isActive: updatedUser.isActive,
+      studentClass: updatedUser.studentClass,
+      teacherSubject: updatedUser.teacherSubject,
       message: "User updated successfully",
     });
   } catch (error) {
@@ -137,7 +157,7 @@ export const getUsers = async (req, res) => {
     const skip = (page - 1) * limit;
     const filter = {};
 
-    if (role && role !== "all") {
+    if (role && role !== "all" && role !== "") {
       filter.role = role;
     }
 
@@ -193,7 +213,8 @@ export const deleteUser = async (req, res) => {
     }
 
     return res.json({ message: "User deleted successfully" });
-  } catch (error) {
+  }
+  catch (error) {
     return res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

@@ -6,11 +6,11 @@ import loginimage from "./loginimage.avif";
 
 
 const images = {
-  school:school,
-  twitterIcon:twitterIcon,
-  instagramIcon:instagramIcon,
-  linkendinIcon:linkendinIcon,
-  loginimage:loginimage,
+  school: school,
+  twitterIcon: twitterIcon,
+  instagramIcon: instagramIcon,
+  linkendinIcon: linkendinIcon,
+  loginimage: loginimage,
 }
-  
+
 export default images;

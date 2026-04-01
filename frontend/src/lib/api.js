@@ -1,7 +1,7 @@
-import axios from "axios";
+// import axios from "axios";
 
-export const api = axios.create({
-  baseURL: "http://localhost:5918/api",
-  withCredentials: true,
-});
+// export const api = axios.create({
+//   baseURL: "http://localhost:5918/api",
+//   withCredentials: true,
+// });
 

@@ -1,7 +1,14 @@
-import { Inngest } from "inngest";
+import { inngest } from "./client.js";
+import {
+  generateTimeTable,
+  generateExam,
+  handleExamSubmission,
+} from "./functions.js";
 
-// Create a client to send and receive events
-export const inngest = new Inngest({ id: "sms-lms" });
+export { inngest };
 
-// Create an empty array where we'll export future Inngest functions
-export const functions = [];
+export const functions = [
+  generateTimeTable,
+  generateExam,
+  handleExamSubmission,
+];

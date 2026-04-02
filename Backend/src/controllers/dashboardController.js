@@ -3,11 +3,47 @@ import Class from "../models/class.js";
 import Exam from "../models/exam.js";
 import Submission from "../models/submission.js";
 import ActivityLog from "../models/activityLog.js";
-import Timetable from "../models/timeTable.js";
+import Timetable from "../models/timetable.js";
+import Attendance from "../models/attendance.js";
 
 // Helper to get day name (e.g., "Monday")
 const getTodayName = () =>
   new Date().toLocaleDateString("en-US", { weekday: "long" });
+
+// Helper to calculate attendance percentage
+const calculateAttendance = async (query = {}) => {
+  const total = await Attendance.countDocuments(query);
+  if (total === 0) return "0%";
+  const present = await Attendance.countDocuments({ ...query, status: "present" });
+  return `${((present / total) * 100).toFixed(1)}%`;
+};
+
+// Helper to find next class for a teacher/student
+const getNextClass = async (role, id, classId = null) => {
+  const today = getTodayName();
+  const now = new Date().toLocaleTimeString("en-GB", { hour12: false, hour: '2-digit', minute: '2-digit' });
+  
+  const query = classId ? { class: classId } : { "schedule.periods.teacher": id };
+  const timetable = await Timetable.findOne(query).populate("schedule.periods.subject", "name");
+  
+  if (!timetable) return null;
+  
+  const todaySchedule = timetable.schedule.find(s => s.day === today);
+  if (!todaySchedule) return null;
+  
+  const nextPeriod = todaySchedule.periods
+    .filter(p => p.startTime > now)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
+    
+  if (role === "teacher" && nextPeriod && nextPeriod.teacher?.toString() !== id.toString()) {
+     // If teacher is specified but doesn't match this period, filter again
+     // (though the query above finds the timetable, we need the specific period for THIS teacher)
+     const teacherPeriods = todaySchedule.periods.filter(p => p.teacher?.toString() === id.toString());
+     return teacherPeriods.filter(p => p.startTime > now).sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
+  }
+  
+  return nextPeriod;
+};
 
 // @desc    Get Dashboard Statistics (Role Based)
 // @route   GET /api/dashboard/stats
@@ -35,8 +71,8 @@ export const getDashboardStats = async (req, res) => {
       const totalTeachers = await User.countDocuments({ role: "teacher" });
       const activeExams = await Exam.countDocuments({ isActive: true });
 
-      // Mocking Attendance (replace with real Attendance model if needed)
-      const avgAttendance = "94.5%";
+      // Real Attendance Data
+      const avgAttendance = await calculateAttendance();
 
       stats = {
         totalStudents,
@@ -54,19 +90,17 @@ export const getDashboardStats = async (req, res) => {
       const myExamIds = myExams.map((exam) => exam._id);
       const pendingGrading = await Submission.countDocuments({
         exam: { $in: myExamIds },
-        score: 0, // 0 or null = ungraded
+        score: { $in: [0, null] }, 
       });
 
-      // Placeholder: find next class for today
-      const today = getTodayName();
-      const nextClass = "Mathematics - Grade 10";
-      const nextClassTime = "10:00 AM";
-
+      // Real Time-based Scheduling
+      const nextPeriod = await getNextClass("teacher", user._id);
+      
       stats = {
         myClassesCount,
         pendingGrading,
-        nextClass,
-        nextClassTime,
+        nextClass: nextPeriod?.subject?.name || "No upcoming sessions",
+        nextClassTime: nextPeriod?.startTime || "--:--",
         recentActivity: formattedActivity,
       };
     } else if (user.role === "student") {
@@ -81,12 +115,15 @@ export const getDashboardStats = async (req, res) => {
         dueDate: { $gte: new Date() },
       });
 
-      // Mock attendance
-      const myAttendance = "98%";
+      // Real Personal Stats
+      const myAttendance = await calculateAttendance({ student: user._id });
+      const nextPeriod = await getNextClass("student", user._id, user.studentClass);
 
       stats = {
         myAttendance,
         pendingAssignments,
+        nextClass: nextPeriod?.subject?.name || "Relax Time",
+        nextClassTime: nextPeriod?.startTime || "--:--",
         nextExam: nextExam?.title || "No upcoming exams",
         nextExamDate: nextExam
           ? new Date(nextExam.dueDate).toLocaleDateString()

@@ -20,11 +20,12 @@ export const register = async (req, res) => {
       teacherSubject,
       isActive,
     } = req.body;
+    console.log("REGISTRATION PAYLOAD:", req.body);
 
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: `Registration failed: Email ${email} is already in use.` });
     }
 
     const newUser = await User.create({
@@ -46,9 +47,6 @@ export const register = async (req, res) => {
         });
       }
 
-      // Automatically log in the user after registration
-      // generateToken(newUser._id.toString(), res);
-
       return res.status(201).json({
         _id: newUser._id,
         name: newUser.name,
@@ -61,10 +59,13 @@ export const register = async (req, res) => {
       });
     }
 
-    return res.status(400).json({ message: "Invalid user data" });
+    return res.status(400).json({ message: "Registration failed: Invalid user data provided." });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server Error", error: error.message, stack: error.stack });
+    console.error("REGISTRATION ERROR DETAILS:", error);
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: "Validation Error", details: error.errors });
+    }
+    return res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
@@ -153,12 +154,17 @@ export const getUsers = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const role = req.query.role;
     const search = req.query.search;
+    const classId = req.query.classId;
 
     const skip = (page - 1) * limit;
     const filter = {};
 
     if (role && role !== "all" && role !== "") {
       filter.role = role;
+    }
+
+    if (classId) {
+      filter.studentClass = classId;
     }
 
     if (search) {
@@ -172,6 +178,8 @@ export const getUsers = async (req, res) => {
       User.countDocuments(filter),
       User.find(filter)
         .select("-password")
+        .populate("teacherSubject", "name")
+        .populate("studentClass", "name")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),

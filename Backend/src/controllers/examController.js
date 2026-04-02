@@ -17,6 +17,7 @@ export const triggerExamGeneration = async (req, res) => {
       topic,
       difficulty,
       count,
+      assessmentType,
     } = req.body;
 
     const subjectDoc = await Subject.findById(subject);
@@ -31,6 +32,7 @@ export const triggerExamGeneration = async (req, res) => {
       teacher: teacherId,
       duration: duration || 60,
       dueDate: dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      assessmentType: assessmentType || "exam",
       isActive: false,
       questions: [],
     });
@@ -90,6 +92,12 @@ export const getExams = async (req, res) => {
       query = { class: user.studentClass, isActive: true };
     } else if (user.role === "teacher") {
       query = { teacher: user._id };
+    }
+
+    if (req.query.type) {
+      query.assessmentType = req.query.type;
+    } else {
+      query.assessmentType = "exam";
     }
 
     const exams = await Exam.find(query)

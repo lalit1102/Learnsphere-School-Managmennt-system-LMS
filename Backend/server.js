@@ -1,5 +1,5 @@
-import express from "express"
-import dotenv from "dotenv";
+import "dotenv/config";
+import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors"
 import morgan from "morgan"
@@ -11,15 +11,21 @@ import academicYearRouter from "./src/routes/academicYearRoutes.js";
 import classRouter from "./src/routes/classRoutes.js";
 import LogsRouter from "./src/routes/activitieslog.js";
 import subjectRouter from "./src/routes/subjectRoutes.js";
-import timeRouter from "./src/routes/timeTabelRoutes.js";
+import timetableRouter from "./src/routes/timetableRoutes.js";
 import examRouter from "./src/routes/examRoutes.js";
 import dashboardRouter from "./src/routes/dashboard.js";
+import settingsRouter from "./src/routes/settingsRoutes.js";
+import attendanceRouter from "./src/routes/attendanceRoutes.js";
 import { serve } from "inngest/express";
-import { inngest } from "./src/inngest/index.js";
+// import { inngest } from "./src/inngest/index.js";
+// import { generateTimeTable, generateExam, handleExamSubmission } from "./src/inngest/functions.js";
+// import { functions } from "./src/inngest/index.js";
+import { inngest } from "./src/inngest/client.js";
 import { generateTimeTable, generateExam, handleExamSubmission } from "./src/inngest/functions.js";
 
-//read env file
-dotenv.config();
+const functions = [generateTimeTable, generateExam, handleExamSubmission];
+
+//read env file (Configured at top)
 
 // express app create
 const app = express()
@@ -59,16 +65,26 @@ app.use("/api/academic-years", academicYearRouter)
 
 app.use("/api/classes", classRouter);
 app.use("/api/subjects", subjectRouter);
-app.use("/api/timetables", timeRouter)
+app.use("/api/timetables", timetableRouter)
 app.use("/api/exams", examRouter);
 app.use("/api/dashboard", dashboardRouter);
-app.use(
-  "/api/inngest",
-  serve({
-    client: inngest,
-    functions: [generateTimeTable, generateExam, handleExamSubmission],
-  })
-);
+app.use("/api/settings", settingsRouter);
+app.use("/api/attendance", attendanceRouter);
+// app.use(
+//   "/api/inngest",
+//   serve({
+//     client: inngest,
+//     functions: [generateTimeTable, generateExam, handleExamSubmission],
+//   })
+// );
+
+
+
+
+
+console.log("🛠️ Inngest serving functions:", functions.length, "registered");
+
+app.use("/api/inngest", serve({ client: inngest, functions }));
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {

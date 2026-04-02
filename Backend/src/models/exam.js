@@ -8,6 +8,7 @@ const examSchema = new Schema(
     subject: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
     class: { type: Schema.Types.ObjectId, ref: "Class", required: true },
     teacher: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    assessmentType: { type: String, enum: ["exam", "assignment"], default: "exam" },
     duration: { type: Number, required: true }, // in minutes
     dueDate: { type: Date, required: true },
     isActive: { type: Boolean, default: true },

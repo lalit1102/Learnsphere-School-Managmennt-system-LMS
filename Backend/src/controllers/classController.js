@@ -6,7 +6,7 @@ import { logActivity } from "../utils/activitieslog.js";
 // @access  Private/Admin
 export const createClass = async (req, res) => {
   try {
-    const { name, academicYear, classTeacher, capacity } = req.body;
+    const { name, academicYear, classTeacher, capacity, subjects } = req.body;
 
     const existingClass = await Class.findOne({ name, academicYear });
     if (existingClass) {
@@ -21,6 +21,7 @@ export const createClass = async (req, res) => {
       academicYear,
       classTeacher,
       capacity,
+      subjects,
     });
 
     await logActivity({
@@ -78,7 +79,34 @@ export const updateClass = async (req, res) => {
   try {
     const classId = req.params.id;
 
-    const updatedClass = await Class.findByIdAndUpdate(classId, req.body, {
+    if (req.body.name && req.body.academicYear) {
+      const existingClass = await Class.findOne({
+        name: req.body.name,
+        academicYear: req.body.academicYear,
+        _id: { $ne: classId },
+      });
+      if (existingClass) {
+        return res.status(400).json({
+          message: "Class with this name already exists for the specified academic year.",
+        });
+      }
+    }
+
+    // Build clean update object from known fields only
+    const updateData = {};
+    if (req.body.name !== undefined) updateData.name = req.body.name;
+    if (req.body.academicYear !== undefined) updateData.academicYear = req.body.academicYear;
+    if (req.body.capacity !== undefined) updateData.capacity = req.body.capacity;
+    if (req.body.subjects !== undefined) updateData.subjects = req.body.subjects;
+
+    // Handle classTeacher: null means unassign
+    if (req.body.classTeacher === null || req.body.classTeacher === "") {
+      updateData.classTeacher = null;
+    } else if (req.body.classTeacher) {
+      updateData.classTeacher = req.body.classTeacher;
+    }
+
+    const updatedClass = await Class.findByIdAndUpdate(classId, updateData, {
       new: true,
       runValidators: true,
     });
@@ -94,6 +122,7 @@ export const updateClass = async (req, res) => {
 
     res.status(200).json(updatedClass);
   } catch (error) {
+    console.error("Update Class Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

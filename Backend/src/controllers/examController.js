@@ -17,7 +17,6 @@ export const triggerExamGeneration = async (req, res) => {
       topic,
       difficulty,
       count,
-      assessmentType,
     } = req.body;
 
     const subjectDoc = await Subject.findById(subject);
@@ -32,7 +31,6 @@ export const triggerExamGeneration = async (req, res) => {
       teacher: teacherId,
       duration: duration || 60,
       dueDate: dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      assessmentType: assessmentType || "exam",
       isActive: false,
       questions: [],
     });
@@ -81,7 +79,7 @@ export const createExam = async (req, res) => {
   }
 };
 
-// @desc    Get Exams
+// @desc    Get Exams (Student sees available, Teacher sees created)
 // @route   GET /api/exams
 export const getExams = async (req, res) => {
   try {
@@ -92,12 +90,6 @@ export const getExams = async (req, res) => {
       query = { class: user.studentClass, isActive: true };
     } else if (user.role === "teacher") {
       query = { teacher: user._id };
-    }
-
-    if (req.query.type) {
-      query.assessmentType = req.query.type;
-    } else {
-      query.assessmentType = "exam";
     }
 
     const exams = await Exam.find(query)
@@ -111,8 +103,8 @@ export const getExams = async (req, res) => {
   }
 };
 
-// @desc    Get Exam by ID
-// @route   POST /api/exams/:id
+// @desc    Get exam by id
+// @route   GET /api/exams/:id
 export const getExamById = async (req, res) => {
   try {
     const examId = req.params.id;
@@ -170,8 +162,13 @@ export const toggleExamStatus = async (req, res) => {
       return res.status(404).json({ message: "Exam not found" });
     }
 
-    if (user.role !== "admin" && exam.teacher.toString() !== user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to modify this exam" });
+    if (
+      user.role !== "admin" &&
+      exam.teacher.toString() !== user._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to modify this exam" });
     }
 
     exam.isActive = !exam.isActive;
@@ -221,11 +218,13 @@ export const getExamResult = async (req, res) => {
     const studentId = req.user._id;
     const examId = req.params.id;
 
-    const submission = await Submission.findOne({ exam: examId, student: studentId })
-      .populate({
-        path: "exam",
-        select: "title questions._id questions.correctAnswer",
-      });
+    const submission = await Submission.findOne({
+      exam: examId,
+      student: studentId,
+    }).populate({
+      path: "exam",
+      select: "title questions._id questions.correctAnswer",
+    });
 
     if (!submission) {
       return res.status(404).json({ message: "No submission found" });

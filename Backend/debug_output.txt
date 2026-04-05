@@ -1,0 +1,34 @@
+﻿
+=== ALL EXAMS ===
+TITLE: history Mastery Assessment
+  CLASS: 69ccefe6933626292460fe49
+  ACTIVE: false
+---
+TITLE: history Mastery Assessment
+  CLASS: 69ccefe6933626292460fe49
+  ACTIVE: false
+---
+TITLE: history Mastery Assessment
+  CLASS: 69ce56722578c1619fcdebe6
+  ACTIVE: false
+---
+TITLE: circle Mastery Assessment
+  CLASS: 69ce56722578c1619fcdebe6
+  ACTIVE: false
+---
+TITLE: tense Mastery Assessment
+  CLASS: 69ce56722578c1619fcdebe6
+  ACTIVE: false
+---
+TITLE: tense Quiz
+  CLASS: 69ce56722578c1619fcdebe6
+  ACTIVE: false
+---
+TITLE: history Quiz
+  CLASS: 69ce07d97632e083a82e2918
+  ACTIVE: true
+---
+
+=== STUDENT ANSH CLASS ===
+Student class: 69ce56722578c1619fcdebe6
+Matching active exams for student: 0

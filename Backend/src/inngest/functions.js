@@ -15,24 +15,19 @@ export const generateTimeTable = inngest.createFunction(
     const { classId, academicYearId, settings } = event.data;
 
     const contextData = await step.run("fetch-class-context", async () => {
-      // fetch class
       const classData = await Class.findById(classId).populate("subjects");
       if (!classData) throw new NonRetriableError("Class not found");
 
-      // Filter out dangling references
-      const validSubjects = (classData.subjects || []).filter(s => s !== null);
-      const classSubjectsIds = validSubjects.map((sub) =>
+      const allTeacher = await User.find({ role: "teacher" });
+
+      const classSubjectsIds = classData.subjects.map((sub) =>
         sub._id.toString()
       );
 
-      // fetch teachers
-      const allTeacher = await User.find({ role: "teacher" });
-
-      // filter qualified teachers for class subjects
       const qualifiedTeachers = allTeacher
         .filter((teacher) => {
           if (!teacher.teacherSubject) return false;
-          return teacher.teacherSubject.filter(st => st !== null).some((subId) =>
+          return teacher.teacherSubject.some((subId) =>
             classSubjectsIds.includes(subId.toString())
           );
         })
@@ -42,16 +37,15 @@ export const generateTimeTable = inngest.createFunction(
           subjects: tea.teacherSubject,
         }));
 
-      const subjectsPayload = validSubjects.map((sub) => ({
+      const subjectsPayload = classData.subjects.map((sub) => ({
         id: sub._id,
         name: sub.name,
         code: sub.code,
       }));
 
-      // here we should check if we have teachers and subjects
       if (subjectsPayload.length === 0 || qualifiedTeachers.length === 0)
         throw new NonRetriableError(
-          "No Subjects or Teachers assigned to these class. Please check class configuration."
+          "No Subjects or Teachers assigned to these class"
         );
 
       return {
@@ -61,7 +55,6 @@ export const generateTimeTable = inngest.createFunction(
       };
     });
 
-    // generate timetable logic would go here
     const aiSchedule = await step.run("generate-timetable-logic", async () => {
       const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
       if (!apiKey) {
@@ -87,8 +80,8 @@ export const generateTimeTable = inngest.createFunction(
         - Other Timetables: ${JSON.stringify(allTimetables)}
 
         STRICT RULES:
-        1. CRITICAL: You MUST generate exactly ${settings.periods} periods for EVERY day.
-        2. Assign a Teacher to every Subject period. Teacher MUST have the subject ID in their list.
+        1. Assign a Teacher to every Subject period.
+        2. Teacher MUST have the subject ID in their list.
         3. Break Time/Free Period after every 2 periods(10 minutes), Lunch Time after 5 periods(at 12:00)(30 minutes).
         4. Avoid clashes with other classes(teacher can't be in two classes at the same time).
         5. Output strict JSON only. Schema:
@@ -98,7 +91,6 @@ export const generateTimeTable = inngest.createFunction(
                  "day": "Monday",
                  "periods": [
                    { "subject": "SUBJECT_ID", "teacher": "TEACHER_ID", "startTime": "HH:MM", "endTime": "HH:MM" }
-                   // ... Must contain exactly ${settings.periods} items
                  ]
                }
              ]
@@ -109,8 +101,7 @@ export const generateTimeTable = inngest.createFunction(
         apiKey,
       });
 
-      // Mapped to Gemini 2.5 Flash Lite as per API capability
-      const activeModel = google("gemini-2.5-flash-lite", { thinking: true });
+      const activeModel = google("gemini-3-flash-preview");
 
       const { text } = await generateText({
         prompt,
@@ -121,9 +112,7 @@ export const generateTimeTable = inngest.createFunction(
       return JSON.parse(cleanJSON);
     });
 
-    // now let save
     await step.run("save-timetable", async () => {
-      // Delete existing to avoid duplicates
       await Timetable.findOneAndDelete({
         class: classId,
         academicYear: academicYearId,
@@ -179,14 +168,13 @@ export const generateExam = inngest.createFunction(
         apiKey,
       });
 
-      const activeModel = google("gemini-2.5-flash-lite");
+      const activeModel = google("gemini-3-flash-preview");
 
       const { text } = await generateText({
         prompt,
         model: activeModel,
       });
 
-      // Sanitize JSON
       const cleanJson = text
         .replace(/```json/g, "")
         .replace(/```/g, "")
@@ -194,7 +182,6 @@ export const generateExam = inngest.createFunction(
       return JSON.parse(cleanJson);
     });
 
-    // now let save
     await step.run("save-exam", async () => {
       const exam = await Exam.findById(examId);
 
@@ -202,9 +189,8 @@ export const generateExam = inngest.createFunction(
         throw new NonRetriableError(`Exam ${examId} not found`);
       }
 
-      // Update the exam with the new questions
       exam.questions = aiExam;
-      exam.isActive = false; // Keep it inactive until teacher reviews it
+      exam.isActive = false;
 
       await exam.save();
 
@@ -214,14 +200,12 @@ export const generateExam = inngest.createFunction(
   }
 );
 
-// handle submission inside inngest
 export const handleExamSubmission = inngest.createFunction(
   { id: "Handle-Exam-Submission", triggers: [{ event: "exam/submit" }] },
   async ({ event, step }) => {
     const { examId, studentId, answers } = event.data;
 
     await step.run("process-exam-submission", async () => {
-      // 1. Check if already submitted
       const existingSubmission = await Submission.findOne({
         exam: examId,
         student: studentId,
@@ -230,7 +214,6 @@ export const handleExamSubmission = inngest.createFunction(
         throw new NonRetriableError("Exam already submitted");
       }
 
-      // 2. Fetch full exam (with answers)
       const exam = await Exam.findById(examId).select(
         "+questions.correctAnswer"
       );
@@ -238,7 +221,6 @@ export const handleExamSubmission = inngest.createFunction(
         throw new NonRetriableError(`Exam ${examId} not found`);
       }
 
-      // 3. Calculate Score
       let score = 0;
       let totalPoints = 0;
 
@@ -252,7 +234,6 @@ export const handleExamSubmission = inngest.createFunction(
         }
       });
 
-      // 4. Save Submission
       await Submission.create({
         exam: examId,
         student: studentId,

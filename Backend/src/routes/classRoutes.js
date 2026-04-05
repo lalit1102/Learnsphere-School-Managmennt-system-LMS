@@ -12,8 +12,8 @@ const classRouter = express.Router();
 // Create a new class (Admin only)
 classRouter.post("/create", protect, authorize(["admin"]), createClass);
 
-// Get all classes (Admin only)
-classRouter.get("/", protect, authorize(["admin"]), getAllClasses);
+// Get all classes (Admin and Teacher)
+classRouter.get("/", protect, authorize(["admin", "teacher"]), getAllClasses);
 
 // Update a class (Admin only)
 classRouter.patch("/update/:id", protect, authorize(["admin"]), updateClass);

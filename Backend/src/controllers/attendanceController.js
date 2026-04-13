@@ -27,7 +27,9 @@ export const markAttendance = async (req, res) => {
         update: {
           $set: {
             status: item.status,
-            remarks: item.remarks || "",
+            attendance_remarks: item.remarks || "",
+            remarks: item.remarks || "", // Keep for backward compatibility
+            subject: item.subjectId || null, 
             markedBy: req.user._id,
           },
         },
@@ -93,6 +95,8 @@ export const getStudentAttendance = async (req, res) => {
 
     const history = await Attendance.find(query)
       .populate("class", "name")
+      .populate("markedBy", "name")
+      .populate("subject", "name")
       .sort({ date: -1 });
 
     res.json(history);

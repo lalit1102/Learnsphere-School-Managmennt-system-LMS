@@ -5,6 +5,7 @@ const userRoutes = express.Router();
 
 import { protect, authorize } from "../middleware/authMiddleware.js";
 import { deleteUser, getUserProfile, getUsers, login, logoutUser, register, updateUser } from "../controllers/userController.js";
+import { getUserRolesAndPermissions } from "../controllers/teacherRequestController.js";
 
 
 userRoutes.post(
@@ -22,6 +23,7 @@ userRoutes.post(
 userRoutes.post("/login", login);
 userRoutes.post("/logout", logoutUser);
 userRoutes.get("/profile", protect, getUserProfile);
+userRoutes.get("/:userId/roles", protect, getUserRolesAndPermissions);
 userRoutes.get("/", protect, authorize(["admin", "teacher"]), getUsers);
 userRoutes.put(
   "/update/:id",

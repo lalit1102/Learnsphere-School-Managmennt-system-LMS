@@ -16,9 +16,13 @@ export const register = async (req, res) => {
       email,
       password,
       role,
+      designation,
       studentClass,
       teacherSubject,
       isActive,
+      contact,
+      approvalStatus,
+      requestedPermissions,
     } = req.body;
     console.log("REGISTRATION PAYLOAD:", req.body);
 
@@ -33,9 +37,13 @@ export const register = async (req, res) => {
       email,
       password,
       role,
+      designation,
+      contact,
       studentClass,
       teacherSubject,
       isActive,
+      approvalStatus: approvalStatus || "Approved",
+      requestedPermissions: requestedPermissions || [],
     });
 
     if (newUser) {
@@ -85,10 +93,18 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
-      generateToken(user._id.toString(), res);
+      if (user.role === "teacher" && user.approvalStatus !== "Approved") {
+        return res.status(403).json({
+          message: "Your teacher account is pending approval.",
+          status: user.approvalStatus,
+        });
+      }
 
-      // Do not return the hashed password
-      return res.json(user);
+      generateToken(user._id.toString(), res);
+      const safeUser = user.toObject();
+      delete safeUser.password;
+
+      return res.json(safeUser);
     }
 
     return res.status(401).json({ message: "Invalid email or password" });
@@ -111,8 +127,12 @@ export const updateUser = async (req, res) => {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
     user.role = req.body.role || user.role;
+    user.designation = req.body.designation || user.designation;
+    user.contact = req.body.contact || user.contact;
     user.isActive =
       req.body.isActive !== undefined ? req.body.isActive : user.isActive;
+    user.approvalStatus = req.body.approvalStatus || user.approvalStatus;
+    user.requestedPermissions = req.body.requestedPermissions || user.requestedPermissions;
     user.studentClass = req.body.studentClass || user.studentClass;
     user.teacherSubject = req.body.teacherSubject || user.teacherSubject;
 
@@ -242,6 +262,9 @@ export const getUserProfile = async (req, res) => {
         name: req.user.name,
         email: req.user.email,
         role: req.user.role,
+        designation: req.user.designation,
+        contact: req.user.contact,
+        approvalStatus: req.user.approvalStatus,
       },
     });
   } catch (error) {

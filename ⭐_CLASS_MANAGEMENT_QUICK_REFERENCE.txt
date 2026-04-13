@@ -1,0 +1,513 @@
+/**
+ * CLASS MANAGEMENT RBAC - QUICK REFERENCE
+ * =======================================
+ * 
+ * Quick lookup table for role-based class access and functionality
+ */
+
+/**
+ * ============================================
+ * THREE ROLES & CLASS PERMISSIONS
+ * ============================================
+ */
+
+/**
+ * 🔴 ADMIN ROLE
+ * ==============
+ */
+
+ADMIN_PERMISSIONS = {
+  // Class Management
+  "Create Classes": true,          // POST /api/classes/create
+  "View All Classes": true,        // GET /api/classes (all)
+  "View Any Class Details": true,  // GET /api/classes/:id
+  "Edit Classes": true,            // PATCH /api/classes/:id
+  "Delete Classes": true,          // DELETE /api/classes/:id
+  "Assign Teachers": true,         // When creating/editing class
+
+  // Student Management in Classes
+  "Add Student to Any Class": true,           // POST /api/classes/:id/students/add
+  "Remove Student from Any Class": true,      // DELETE /api/classes/:id/students/:studentId
+  "View Students of Any Class": true,         // GET /api/classes/:id/students
+
+  // Dashboard
+  "See All Classes Card": true,
+  "See Create Class Form": true,
+  "See Admin Actions": true,
+};
+
+ADMIN_UI = {
+  create_button: true,      // ✅ Visible
+  edit_buttons: true,       // ✅ Visible on all classes
+  delete_buttons: true,     // ✅ Visible on all classes
+  search: true,             // ✅ Can search all classes
+  manage_students: true,    // ✅ Can manage students in any class
+  my_classes_section: false, // ❌ Not shown
+};
+
+/**
+ * 🟡 TEACHER ROLE
+ * ================
+ */
+
+TEACHER_PERMISSIONS = {
+  // Class Management
+  "Create Classes": false,         // ❌ 403 Forbidden
+  "View Assigned Classes Only": true,      // GET /api/classes (filtered to assigned)
+  "View Details of Assigned Class": true,  // GET /api/classes/:id (own class)
+  "Edit Classes": false,           // ❌ 403 Forbidden
+  "Delete Classes": false,         // ❌ 403 Forbidden
+
+  // Student Management in Own Classes
+  "Add Student to Own Class": true,        // POST /api/classes/:id/students/add (own)
+  "Remove Student from Own Class": true,   // DELETE /api/classes/:id/students/:studentId (own)
+  "View Students of Own Class": true,      // GET /api/classes/:id/students (own)
+  "Add Student to Other Classes": false,   // ❌ 403 Forbidden
+  "View Other Teacher's Classes": false,   // ❌ 403 Forbidden
+
+  // Dashboard
+  "See My Classes": true,
+  "See Create Class Form": false,
+  "See Admin Actions": false,
+};
+
+TEACHER_UI = {
+  create_button: false,     // ❌ Not visible
+  edit_buttons: false,      // ❌ Not visible
+  delete_buttons: false,    // ❌ Not visible
+  search: false,            // ❌ Not applicable
+  manage_students: true,    // ✅ On own classes only
+  my_classes_section: true, // ✅ "My Classes" shown
+};
+
+/**
+ * 🟢 STUDENT ROLE
+ * ================
+ */
+
+STUDENT_PERMISSIONS = {
+  // Class Management
+  "Create Classes": false,         // ❌ 403 Forbidden
+  "View Own Class": true,          // GET /api/classes (filtered to own)
+  "View Class Details": true,      // GET /api/classes/:id (own only)
+  "Edit Classes": false,           // ❌ 403 Forbidden
+  "Delete Classes": false,         // ❌ 403 Forbidden
+  "View Other Classes": false,     // ❌ 403 Forbidden
+
+  // Student Management
+  "Add Students": false,           // ❌ 403 Forbidden
+  "Remove Students": false,        // ❌ 403 Forbidden
+  "View Classmates": true,         // GET /api/classes/:id/students (own class)
+  "View Other Class Students": false, // ❌ 403 Forbidden
+
+  // Dashboard
+  "See My Class Section": true,
+  "See Create Class Form": false,
+};
+
+STUDENT_UI = {
+  create_button: false,     // ❌ Not visible
+  edit_buttons: false,      // ❌ Not visible
+  delete_buttons: false,    // ❌ Not visible
+  search: false,            // ❌ Not applicable
+  manage_students: false,   // ❌ Not visible
+  classmates_list: true,    // ✅ Visible
+  my_class_section: true,   // ✅ "My Class" shown
+};
+
+/**
+ * ============================================
+ * API ENDPOINT ACCESS MATRIX
+ * ============================================
+ */
+
+const ENDPOINT_ACCESS = {
+  // Class CRUD
+  "POST /api/classes/create": {
+    admin: "✅ 201 Created",
+    teacher: "❌ 403 Forbidden",
+    student: "❌ 403 Forbidden",
+  },
+
+  "GET /api/classes": {
+    admin: "✅ 200 (all classes)",
+    teacher: "✅ 200 (assigned only)",
+    student: "✅ 200 (own class only)",
+  },
+
+  "GET /api/classes/:id": {
+    admin: "✅ 200 (any class)",
+    teacher: "✅ 200 (own class) / ❌ 403 (other)",
+    student: "✅ 200 (own only) / ❌ 403 (other)",
+  },
+
+  "PATCH /api/classes/:id": {
+    admin: "✅ 200",
+    teacher: "❌ 403",
+    student: "❌ 403",
+  },
+
+  "DELETE /api/classes/:id": {
+    admin: "✅ 200",
+    teacher: "❌ 403",
+    student: "❌ 403",
+  },
+
+  // Student Management
+  "POST /api/classes/:id/students/add": {
+    admin: "✅ 200 (any class)",
+    teacher: "✅ 200 (own) / ❌ 403 (other)",
+    student: "❌ 403",
+  },
+
+  "DELETE /api/classes/:id/students/:sid": {
+    admin: "✅ 200 (any class)",
+    teacher: "✅ 200 (own) / ❌ 403 (other)",
+    student: "❌ 403",
+  },
+
+  "GET /api/classes/:id/students": {
+    admin: "✅ 200 (any class)",
+    teacher: "✅ 200 (own) / ❌ 403 (other)",
+    student: "✅ 200 (own) / ❌ 403 (other)",
+  },
+};
+
+/**
+ * ============================================
+ * FRONTEND COMPONENTS & VISIBILITY
+ * ============================================
+ */
+
+const FRONTEND_VISIBILITY = {
+  "AdminClassCreation Component": {
+    admin: "✅ Visible",
+    teacher: "❌ Hidden",
+    student: "❌ Hidden",
+    purpose: "Form to create new classes",
+  },
+
+  "TeacherClasses Component": {
+    admin: "❌ Hidden (not teacher)",
+    teacher: "✅ Visible",
+    student: "❌ Hidden",
+    purpose: "Shows classes taught by teacher",
+  },
+
+  "StudentClass Component": {
+    admin: "❌ Hidden (not student)",
+    teacher: "❌ Hidden (not student)",
+    student: "✅ Visible",
+    purpose: "Shows student's assigned class",
+  },
+
+  "AdminAllClasses Component": {
+    admin: "✅ Visible",
+    teacher: "❌ Hidden",
+    student: "❌ Hidden",
+    purpose: "Browse all classes in system",
+  },
+
+  "ClassCard Component": {
+    edit_button: {
+      admin: "✅ Visible",
+      teacher: "❌ Hidden",
+      student: "❌ Hidden",
+    },
+    delete_button: {
+      admin: "✅ Visible",
+      teacher: "❌ Hidden",
+      student: "❌ Hidden",
+    },
+    manage_students: {
+      admin: "✅ Visible (all)",
+      teacher: "✅ Visible (own only)",
+      student: "❌ Hidden",
+    },
+  },
+};
+
+/**
+ * ============================================
+ * EXAMPLE: DIFFERENT DASHBOARDS
+ * ============================================
+ */
+
+// ADMIN DASHBOARD
+const ADMIN_SEES = `
+┌─────────────────────────────────────────┐
+│ Class Management Dashboard              │
+└─────────────────────────────────────────┘
+
+┌─ Create New Class ────────────────────┐
+│ [Form to create class]                │
+│ - Class name                          │
+│ - Academic year                       │
+│ - Assign teacher dropdown             │
+│ [Create Class] Button                 │
+└───────────────────────────────────────┘
+
+[Search Classes] [Filter by Year]
+
+┌─ All Classes ────────────────────────┐
+│ Class 10-A (35/40 students)           │
+│ [Edit] [Delete]                       │
+│                                       │
+│ Class 10-B (40/40 students)           │
+│ [Edit] [Delete]                       │
+│                                       │
+│ Class 11-A (28/40 students)           │
+│ [Edit] [Delete]                       │
+└───────────────────────────────────────┘
+`;
+
+// TEACHER DASHBOARD
+const TEACHER_SEES = `
+┌───────────────────────────────────────┐
+│ My Classes (2 classes)                │
+└───────────────────────────────────────┘
+
+┌─ Class 10-A ─────────────────────────┐
+│ Teacher: Me                           │
+│ Students: 35/40                       │
+│ [Manage Students]                     │
+└───────────────────────────────────────┘
+
+┌─ Class 11-B ─────────────────────────┐
+│ Teacher: Me                           │
+│ Students: 30/40                       │
+│ [Manage Students]                     │
+└───────────────────────────────────────┘
+
+[No "Create Class" button]
+[No "Edit" or "Delete" buttons]
+`;
+
+// STUDENT DASHBOARD
+const STUDENT_SEES = `
+┌──────────────────────────────────────┐
+│ My Class - Class 10-A                │
+│ Academic Year: 2024-2025             │
+│                                      │
+│ Teacher: Mr. John Smith              │
+│ Classmates: 34 students              │
+└──────────────────────────────────────┘
+
+┌─ My Classmates ─────────────────────┐
+│ ⊙ Alice Johnson                     │
+│ ⊙ Bob Williams                      │
+│ ⊙ Charlie Brown                     │
+│ ⊙ Diana Prince                      │
+│ ... (30 more students)              │
+└─────────────────────────────────────┘
+
+[No ability to create, edit, delete, or manage classes]
+`;
+
+/**
+ * ============================================
+ * COMMON SCENARIOS
+ * ============================================
+ */
+
+const SCENARIOS = {
+  "Admin wants to create a class": {
+    steps: [
+      "Login as admin",
+      "Navigate to Classes",
+      "See 'Create New Class' form",
+      "Fill in details (name, teacher, capacity)",
+      "Click 'Create Class'",
+      "POST /api/classes/create → 201 Created",
+      "Class appears in list",
+    ],
+  },
+
+  "Teacher wants to manage students": {
+    steps: [
+      "Login as teacher",
+      "Go to 'My Classes' section",
+      "Click 'Manage Students' on their class",
+      "Add/Remove students from class",
+      "POST /api/classes/:id/students/add → 200",
+      "DELETE /api/classes/:id/students/:sid → 200",
+      "Student list updates",
+    ],
+  },
+
+  "Teacher tries to create class": {
+    steps: [
+      "Login as teacher",
+      "Go to Classes page",
+      "No 'Create Class' form visible",
+      "If tries to POST directly:",
+      "POST /api/classes/create → 403 Forbidden",
+      "Error: 'Access denied. Your role teacher is not authorized'",
+    ],
+  },
+
+  "Student views their class": {
+    steps: [
+      "Login as student",
+      "Go to Classes/Dashboard",
+      "See 'My Class - Class 10-A'",
+      "See classmates list (34 students)",
+      "See teacher name",
+      "Cannot edit, delete, or add students",
+      "Can only view information",
+    ],
+  },
+
+  "Student tries to view other class": {
+    steps: [
+      "Student logs in",
+      "Tries to access /api/classes/other-class-id",
+      "GET /api/classes/other-class-id → 403 Forbidden",
+      "Error: 'You can only view your own class'",
+    ],
+  },
+};
+
+/**
+ * ============================================
+ * INTEGRATION SUMMARY
+ * ============================================
+ */
+
+const INTEGRATION_STEPS = {
+  1: "Copy classControllerRBAC.js to Backend/src/controllers/",
+  2: "Copy classRoutesRBAC.js to Backend/src/routes/",
+  3: "Update Backend/server.js: import and use classRoutesRBAC",
+  4: "Copy ClassManagement.jsx to Client/src/components/classes/",
+  5: "Import ClassManager in your Dashboard/Classes page",
+  6: "Test with Admin → sees create form and all classes",
+  7: "Test with Teacher → sees only assigned classes",
+  8: "Test with Student → sees only their class",
+  9: "Verify 403 errors for unauthorized access",
+  10: "Verify buttons hidden appropriately for each role",
+};
+
+/**
+ * ============================================
+ * URLS & NAVIGATION
+ * ============================================
+ */
+
+const NAVIGATION_EXAMPLES = {
+  admin: {
+    list_classes: "/classes or /dashboard/classes",
+    create_class: "POST form on /classes",
+    edit_class: "PATCH form modal or separate page",
+    delete_class: "Inline delete button on class card",
+  },
+
+  teacher: {
+    list_classes: "/classes or /dashboard/classes",
+    my_classes: "Shows 'My Classes' section automatically",
+    manage_students: "Click 'Manage Students' on class card",
+  },
+
+  student: {
+    view_class: "/classes or /dashboard/classes",
+    my_class: "Automatically shows single 'My Class' card",
+    view_classmates: "Click classmates list in My Class section",
+  },
+};
+
+/**
+ * ============================================
+ * COMMON ISSUES & SOLUTIONS
+ * ============================================
+ */
+
+const TROUBLESHOOTING = {
+  "Teacher can't see their class": {
+    cause: "Teacher not assigned as classTeacher in database",
+    solution:
+      "Admin must assign teacher to class via PATCH /api/classes/:id",
+    verify: "Check class.classTeacher matches teacher._id",
+  },
+
+  "Student sees multiple classes": {
+    cause: "Student assigned to multiple studentClass values (bad data)",
+    solution: "Fix database - student should have ONE studentClass only",
+    verify: "Student.studentClass should be single ObjectId, not array",
+  },
+
+  "403 even though role is correct": {
+    cause: "Role string mismatch (case sensitivity or extra spaces)",
+    solution: 'Check roles match exactly: "admin", "teacher", "student"',
+    verify: "Log req.user.role to see exact value',
+  },
+
+  "Buttons showing for wrong role": {
+    cause: "useShowFor() not working or wrong condition",
+    solution: "Verify AuthProvider wraps app, check { admin, teacher }",
+    verify: "Check browser console for errors, log user object",
+  },
+
+  "API returns all classes instead of filtered": {
+    cause: "Role check missing in controller getAllClasses()",
+    solution: "Verify classControllerRBAC.js has role-based filtering",
+    verify: "Check switch statement for user role filtering logic",
+  },
+};
+
+/**
+ * ============================================
+ * FILES CREATED
+ * ============================================
+ */
+
+const FILES = {
+  backend: {
+    "Backend/src/controllers/classControllerRBAC.js": "Enhanced controller with role-based logic",
+    "Backend/src/routes/classRoutesRBAC.js": "RBAC-protected routes",
+    "Backend/src/CLASS_MANAGEMENT_RBAC_GUIDE.js": "Complete integration guide",
+  },
+  frontend: {
+    "Client/src/components/classes/ClassManagement.jsx":
+      "Role-based React components",
+  },
+};
+
+/**
+ * ============================================
+ * TESTING CHECKLIST
+ * ============================================
+ */
+
+const TEST_CASES = {
+  admin: {
+    "Create class": "✅ POST /api/classes/create → 201",
+    "View all classes": "✅ GET /api/classes → all",
+    "Edit class": "✅ PATCH /api/classes/:id → 200",
+    "Delete class": "✅ DELETE /api/classes/:id → 200",
+    "Add student": "✅ POST /api/classes/:id/students/add → 200",
+    "See create form": "✅ AdminClassCreation visible",
+    "See all students": "✅ GET /api/classes/:id/students → all",
+  },
+
+  teacher: {
+    "Cannot create class": "✅ POST /api/classes/create → 403",
+    "See own classes": "✅ GET /api/classes → filtered",
+    "Cannot edit": "✅ PATCH /api/classes/:id → 403",
+    "Cannot delete": "✅ DELETE /api/classes/:id → 403",
+    "Add to own class": "✅ POST /api/classes/:id/students/add → 200",
+    "Cannot add to other class": "✅ POST other:id/students/add → 403",
+    "See My Classes section": "✅ TeacherClasses visible",
+  },
+
+  student: {
+    "Cannot create class": "✅ POST /api/classes/create → 403",
+    "See own class": "✅ GET /api/classes → 1",
+    "Cannot edit": "✅ PATCH /api/classes/:id → 403",
+    "Cannot delete": "✅ DELETE /api/classes/:id → 403",
+    "Cannot add students": "✅ POST /students/add → 403",
+    "See classmates": "✅ GET /api/classes/:id/students → own only",
+    "Cannot see other students": "✅ GET other:id/students → 403",
+    "See My Class card": "✅ StudentClass visible",
+  },
+};
+
+export default "Reference guide for class management RBAC system. See .js files for code.";

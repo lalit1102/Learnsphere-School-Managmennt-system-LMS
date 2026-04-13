@@ -1,0 +1,369 @@
+================================================================================
+                    LEARNSPHERE LMS - ROLES & RESPONSIBILITIES
+                         System Documentation v1.0
+================================================================================
+
+
+OVERVIEW
+--------
+LearnSphere is a comprehensive School Learning Management System that serves
+three primary user roles: Admin, Teacher, and Student. Each role has distinct
+responsibilities, permissions, and workflows within the system.
+
+
+================================================================================
+                              ADMIN WORK
+================================================================================
+
+Main Responsibilities:
+  - System administration and oversight
+  - User and role management
+  - Content and curriculum organization
+  - System monitoring and analytics
+
+
+Core Actions & Permissions:
+
+  1. USER MANAGEMENT
+     • Add new teacher and student accounts to the system
+     • Edit user profile information (name, email, contact details)
+     • Deactivate or remove user accounts
+     • View complete user directory with role and status filters
+     • Batch import users (if feature available)
+
+  2. TEACHER APPROVAL WORKFLOW
+     • Review pending teacher registration requests
+     • Approve qualified teachers for system access
+     • Reject teacher requests with reason notification
+     • Reassign roles and permissions to approved teachers
+     • Monitor teacher approval history and audit logs
+
+  3. ROLE & PERMISSION ASSIGNMENT
+     • Assign roles (Admin, Teacher, Student) to users
+     • Grant specific permissions based on role requirements
+     • Create custom permission sets if needed
+     • Revoke permissions when necessary
+     • View permission matrix for all roles
+
+  4. ACADEMIC STRUCTURE SETUP
+     • Create and manage academic years
+     • Define subjects for curriculum
+     • Setup classes and class sections
+     • Assign class teachers to classes
+     • Configure school hierarchy and organizational units
+
+  5. SYSTEM ANALYTICS & REPORTING
+     • View system-wide dashboards and KPIs
+     • Generate attendance reports across all classes
+     • Monitor assignment and exam submission rates
+     • Track student performance analytics
+     • Access system activity audit logs
+     • Export reports in required formats
+
+  6. COMMUNICATION & NOTIFICATIONS
+     • Send system-wide announcements to teachers/students
+     • Broadcast important notifications
+     • Monitor notification delivery status
+     • Access notification history and logs
+
+  7. CONTENT MANAGEMENT OVERSIGHT
+     • Monitor all assignments and exams created by teachers
+     • Approve or request modifications to curriculum content
+     • View study materials library
+     • Ensure content compliance with policies
+     • Manage system-wide content templates
+
+  8. SYSTEM CONFIGURATION
+     • Configure system settings and preferences
+     • Manage academic calendar and schedules
+     • Set attendance rules and policies
+     • Configure grading scales and criteria
+     • Manage system backup and recovery
+
+
+================================================================================
+                             TEACHER WORK
+================================================================================
+
+Main Responsibilities:
+  - Classroom management and instruction
+  - Content creation and delivery
+  - Student assessment and feedback
+  - Performance tracking and reporting
+
+
+Core Actions & Permissions:
+
+  1. TEACHER REGISTRATION & ACCESS
+     • Submit teacher registration request on first login
+     • Provide credentials and teaching qualifications
+     • Wait for admin approval before full access
+     • Receive approval/rejection notification
+     • Gain system access upon approval
+
+  2. CLASSROOM MANAGEMENT
+     • View assigned classes and class details
+     • Access student roster for assigned classes
+     • View class schedule and timetable
+     • Manage classroom announcements
+     • Communicate with class students via notifications
+
+  3. ATTENDANCE MANAGEMENT
+     • Take daily attendance for assigned classes
+     • Mark students present, absent, or on leave
+     • View attendance history and analytics
+     • Generate attendance reports for classes
+     • Identify and track chronic absenteeism
+
+  4. ASSIGNMENT CREATION & MANAGEMENT
+     • Create new assignments with instructions and rubrics
+     • Set assignment deadlines and submission criteria
+     • Upload assignment materials and resources
+     • Edit or delete assignments before submission deadline
+     • View students who have submitted assignments
+     • Provide feedback on student submissions
+
+  5. EXAM & QUIZ CREATION
+     • Design exams with multiple question types
+     • Set exam duration and scoring parameters
+     • Create quizzes for formative assessment
+     • Schedule exams with date and time
+     • Configure exam access and submission rules
+     • Generate exam answer keys
+
+  6. GRADING & ASSESSMENT
+     • Grade student assignments and exams
+     • Provide detailed feedback and comments
+     • View submission status and timestamps
+     • Generate grade reports and transcripts
+     • Track individual student progress over time
+     • Identify students needing additional support
+
+  7. STUDENT PERFORMANCE MONITORING
+     • View individual student dashboards
+     • Track grades, attendance, and participation
+     • Identify students at risk of falling behind
+     • Generate performance analytics and insights
+     • Communicate performance concerns to students
+
+  8. STUDY MATERIALS & RESOURCES
+     • Upload and organize study materials
+     • Create digital content and lesson plans
+     • Organize materials by topic/chapter/unit
+     • Share resources with students
+     • Archive old materials
+
+  9. TEACHER COLLABORATION
+     • Access curriculum planning tools
+     • Collaborate with other teachers on subjects
+     • Share resources and best practices
+     • Participate in department meetings via system
+     • Access shared material library
+
+  10. COMMUNICATION WITH STAKEHOLDERS
+      • Send messages and notifications to students
+      • Communicate with admin regarding issues
+      • Respond to student enquiries
+      • Send parent notifications (if parent role exists)
+      • Access communication history and logs
+
+
+================================================================================
+                            STUDENT WORK
+================================================================================
+
+Main Responsibilities:
+  - Learning and academic engagement
+  - Assignment and exam submission
+  - Personal performance tracking
+  - Attendance awareness
+
+
+Core Actions & Permissions:
+
+  1. DASHBOARD & HOME
+     • View personal dashboard with key information
+     • Access quick links to frequent tasks
+     • View upcoming assignments and exams
+     • See notifications and announcements
+     • Customize dashboard widgets
+
+  2. ATTENDANCE TRACKING
+     • View personal attendance record
+     • Check attendance percentage
+     • View attendance history by subject/class
+     • Receive low attendance alerts
+     • Request leave or report absence (if available)
+
+  3. CLASS TIMETABLE & SCHEDULE
+     • View class schedule and timetable
+     • See upcoming classes and subjects
+     • Access class timings and locations
+     • Receive schedule notifications
+     • Identify free periods
+
+  4. ASSIGNMENT SUBMISSION
+     • View all assigned assignments for classes
+     • Read assignment instructions and requirements
+     • Download assignment resources and materials
+     • Submit completed assignments before deadline
+     • Resubmit assignments if allowed by teacher
+     • Check submission status and timestamps
+     • Receive feedback from teachers
+
+  5. EXAM PARTICIPATION
+     • View scheduled exams and quizzes
+     • See exam details (time, duration, format)
+     • Access exam instructions and rules
+     • Submit exam answers within time limit
+     • View exam results and scores after publication
+     • Access exam answer keys if provided
+
+  6. PERFORMANCE TRACKING
+     • View personal grades and scores
+     • Access grade distribution and analytics
+     • See performance trends over time
+     • Identify subject strengths and weaknesses
+     • Compare performance metrics
+     • Download grade reports
+
+  7. STUDY MATERIALS ACCESS
+     • Browse and download study materials
+     • Organize materials by subject/topic
+     • Access lesson notes and summaries
+     • View teacher-provided resources
+     • Search material library
+
+  8. COMMUNICATION
+     • Receive notifications from teachers and admin
+     • Read announcements and important updates
+     • Check messages from teachers
+     • Ask questions via messaging (if available)
+     • Access communication history
+
+  9. PERSONAL PROFILE
+     • View and update personal information
+     • Change password
+     • Update contact details
+     • Set notification preferences
+     • View enrollment history
+
+  10. PERFORMANCE INSIGHTS
+       • View personalized learning recommendations
+       • Identify areas needing improvement
+       • Track overall academic progress
+       • Set personal learning goals (if available)
+       • Receive performance alerts from teachers
+
+
+================================================================================
+                           WORKFLOW EXAMPLES
+================================================================================
+
+TEACHER APPROVAL WORKFLOW:
+  1. New teacher registers on platform
+  2. Account created in "Pending Approval" status
+  3. Admin reviews teacher request and credentials
+  4. Admin approves or rejects request
+  5. Teacher receives approval notification
+  6. Upon approval, teacher gains full system access
+  7. Admin assigns classes and subjects to teacher
+
+ASSIGNMENT SUBMISSION WORKFLOW:
+  1. Teacher creates assignment with deadline
+  2. Students see assignment on dashboard
+  3. Students download materials and complete work
+  4. Students submit assignment before deadline
+  5. Teacher reviews submissions
+  6. Teacher grades and provides feedback
+  7. Students view grades and feedback
+
+ATTENDANCE WORKFLOW:
+  1. Teacher takes class attendance daily
+  2. Students can view their attendance record
+  3. Admin monitors overall attendance trends
+  4. Alerts sent for low attendance
+  5. Attendance reports generated periodically
+  6. Parents/Students notified of concerns
+
+EXAM WORKFLOW:
+  1. Teacher creates exam and sets schedule
+  2. Students see exam details on dashboard
+  3. On exam date, students access exam
+  4. Students submit answers within time limit
+  5. System records submission automatically
+  6. Teacher grades exams and creates answer keys
+  7. Students view results and feedback
+
+
+================================================================================
+                          PERMISSION SUMMARY
+================================================================================
+
+ADMIN:
+  • Full system access
+  • View all data across all roles
+  • Modify user information and roles
+  • Create and delete system content
+  • Generate reports and analytics
+  • Configure system settings
+  • Access audit logs and system compliance
+
+TEACHER:
+  • Access assigned classes only
+  • Create and manage own assignments/exams
+  • Grade and provide feedback
+  • Take and view attendance
+  • View student performance in classes
+  • Upload and manage study materials
+  • Cannot access other teacher's classes or assessments
+  • Cannot modify user roles or system settings
+
+STUDENT:
+  • View own dashboard and information only
+  • Submit assignments and exams
+  • View own grades and performance
+  • Cannot view other student's marks or data
+  • Cannot modify any content
+  • Cannot access administrative functions
+  • Cannot view other classes or sections unless enrolled
+
+
+================================================================================
+                         IMPORTANT NOTES
+================================================================================
+
+1. ROLE-BASED ACCESS CONTROL (RBAC)
+   All features and data access are controlled based on user role and
+   specific permissions to ensure data security and integrity.
+
+2. APPROVAL REQUIREMENT FOR TEACHERS
+   Teachers must be approved by admin before accessing the system to
+   maintain quality control and security.
+
+3. DATA ISOLATION
+   Students can only see their own data. Teachers can only see their
+   assigned classes. Admins have full visibility.
+
+4. AUDIT & COMPLIANCE
+   All critical actions (approvals, grading, attendance) are logged
+   for audit and compliance purposes.
+
+5. NOTIFICATIONS
+   Users receive notifications for important events (assignment due,
+   exam scheduled, grades published, etc.)
+
+
+================================================================================
+                            VERSION INFORMATION
+================================================================================
+
+Document Version: 1.0
+Last Updated: April 7, 2026
+System: LearnSphere School LMS
+Status: Current
+
+
+For more information or to report issues, contact the system administrator.
+
+================================================================================

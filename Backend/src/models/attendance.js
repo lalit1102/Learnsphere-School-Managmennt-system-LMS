@@ -22,9 +22,17 @@ const attendanceSchema = new mongoose.Schema(
       required: true,
       default: "present",
     },
+    attendance_remarks: {
+      type: String,
+      trim: true,
+    },
     remarks: {
       type: String,
       trim: true,
+    },
+    subject: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subject",
     },
     markedBy: {
       type: mongoose.Schema.Types.ObjectId,

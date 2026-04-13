@@ -16,26 +16,31 @@ import examRouter from "./src/routes/examRoutes.js";
 import dashboardRouter from "./src/routes/dashboard.js";
 import settingsRouter from "./src/routes/settingsRoutes.js";
 import attendanceRouter from "./src/routes/attendanceRoutes.js";
+import teacherRequestRoutes from "./src/routes/teacherRequestRoutes.js";
 import { serve } from "inngest/express";
-// import { inngest } from "./src/inngest/index.js";
-// import { generateTimeTable, generateExam, handleExamSubmission } from "./src/inngest/functions.js";
-// import { functions } from "./src/inngest/index.js";
+import roleRoutes from "./src/routes/roleRoutes.js";
+
 import { inngest } from "./src/inngest/client.js";
 import { generateTimeTable, generateExam, handleExamSubmission } from "./src/inngest/functions.js";
-
 const functions = [generateTimeTable, generateExam, handleExamSubmission];
-
-//read env file (Configured at top)
+// ...existing code...
 
 // express app create
-const app = express()
+const app = express();
 
 // mongodb connected
-connectDB()
+connectDB();
 
 // middleware created
 
-app.use(express.json())  // parse the json body
+app.use(express.json());  // parse the json body
+
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:5174"],
+    credentials: true,
+  })
+);
 
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
 app.use(cookieParser()); // Middleware to parse cookies
@@ -44,13 +49,10 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"))
 }
 
+// Register role routes
+// Register role routes (only once)
+app.use("/api/roles", roleRoutes);
 
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  })
-);
 // testing to route
 app.get("/", (req, res) => {
   res.send("API Working");
@@ -58,8 +60,8 @@ app.get("/", (req, res) => {
 
 // routes
 
-
 app.use("/api/users", userRoutes)
+app.use("/api/teacher-requests", teacherRequestRoutes);
 app.use("/api/activities", LogsRouter);
 app.use("/api/academic-years", academicYearRouter)
 
@@ -70,6 +72,7 @@ app.use("/api/exams", examRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/attendance", attendanceRouter);
+// app.use("/api/roles", roleRoutes); // Duplicate, removed
 // app.use(
 //   "/api/inngest",
 //   serve({
@@ -77,11 +80,6 @@ app.use("/api/attendance", attendanceRouter);
 //     functions: [generateTimeTable, generateExam, handleExamSubmission],
 //   })
 // );
-
-
-
-
-
 console.log("🛠️ Inngest serving functions:", functions.length, "registered");
 
 app.use("/api/inngest", serve({ client: inngest, functions }));

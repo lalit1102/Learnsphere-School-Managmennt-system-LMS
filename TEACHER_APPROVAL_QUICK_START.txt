@@ -1,0 +1,972 @@
+================================================================================
+         LEARNSPHERE - TEACHER APPROVAL WORKFLOW QUICK START
+                   Copy-Paste Ready Code Snippets
+================================================================================
+
+
+1. BACKEND - USER MODEL SCHEMA
+================================================================================
+
+File: Backend/src/models/user.js (ADD THESE FIELDS)
+
+approvalStatus: {
+  type: String,
+  enum: ["PENDING_APPROVAL", "APPROVED", "REJECTED"],
+  default: "PENDING_APPROVAL",
+},
+approvedBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null,
+},
+approvalDate: {
+  type: Date,
+  default: null,
+},
+rejectionReason: {
+  type: String,
+  default: null,
+},
+designation: {
+  type: String,
+  enum: ["Head Master", "Principal", "Teacher", "Coordinator"],
+  default: "Teacher",
+},
+contact: {
+  type: String,
+  match: [/^\d{10}$/, "Please provide a valid 10-digit phone number"],
+},
+qualifications: {
+  type: String,
+},
+
+
+
+2. BACKEND - TEACHER REQUEST MODEL
+================================================================================
+
+File: Backend/src/models/teacherRequest.js (NEW FILE)
+
+import mongoose from "mongoose";
+
+const teacherRequestSchema = new mongoose.Schema(
+  {
+    teacherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    teacherName: String,
+    teacherEmail: String,
+    contact: String,
+    qualifications: {
+      degree: String,
+      specialization: String,
+      experience: Number,
+    },
+    requestStatus: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "REJECTED"],
+      default: "PENDING",
+    },
+    submissionDate: {
+      type: Date,
+      default: Date.now,
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    reviewDate: {
+      type: Date,
+      default: null,
+    },
+    rejectionReason: {
+      type: String,
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model("TeacherRequest", teacherRequestSchema);
+
+
+
+3. BACKEND - TEACHER REQUEST CONTROLLER
+================================================================================
+
+File: Backend/src/controllers/teacherRequestController.js (NEW FILE)
+
+import User from "../models/user.js";
+import TeacherRequest from "../models/teacherRequest.js";
+import ActivityLog from "../models/activityLog.js";
+
+// Submit teacher request
+export const submitTeacherRequest = async (req, res) => {
+  try {
+    const { qualifications, experience, contact } = req.body;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const existingRequest = await TeacherRequest.findOne({
+      teacherId: userId,
+      requestStatus: { $in: ["PENDING", "APPROVED"] },
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({
+        success: false,
+        message: "You already have a pending or approved request",
+      });
+    }
+
+    const teacherRequest = new TeacherRequest({
+      teacherId: userId,
+      teacherName: user.name,
+      teacherEmail: user.email,
+      contact,
+      qualifications: {
+        degree: qualifications.degree,
+        specialization: qualifications.specialization,
+        experience,
+      },
+    });
+
+    await teacherRequest.save();
+
+    await ActivityLog.create({
+      userId,
+      action: "TEACHER_REQUEST_SUBMITTED",
+      entityType: "TeacherRequest",
+      entityId: teacherRequest._id,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Teacher request submitted successfully",
+      request: teacherRequest,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get pending requests (admin)
+export const getPendingRequests = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+
+    const requests = await TeacherRequest.find({ requestStatus: "PENDING" })
+      .populate("teacherId", "name email contact")
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .lean();
+
+    const total = await TeacherRequest.countDocuments({
+      requestStatus: "PENDING",
+    });
+
+    res.status(200).json({
+      success: true,
+      count: requests.length,
+      total,
+      page: Number(page),
+      data: requests,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Approve teacher
+export const approvTeacher = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const adminId = req.user._id;
+
+    const teacherRequest = await TeacherRequest.findById(requestId);
+    if (!teacherRequest) {
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
+
+    teacherRequest.requestStatus = "APPROVED";
+    teacherRequest.reviewedBy = adminId;
+    teacherRequest.reviewDate = new Date();
+    await teacherRequest.save();
+
+    const user = await User.findById(teacherRequest.teacherId);
+    user.approvalStatus = "APPROVED";
+    user.approvedBy = adminId;
+    user.approvalDate = new Date();
+    user.role = "teacher";
+    await user.save();
+
+    await ActivityLog.create({
+      userId: adminId,
+      action: "TEACHER_APPROVED",
+      entityType: "TeacherRequest",
+      entityId: requestId,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Teacher approved successfully",
+      data: { teacherRequest, user },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Reject teacher
+export const rejectTeacher = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { rejectionReason } = req.body;
+    const adminId = req.user._id;
+
+    const teacherRequest = await TeacherRequest.findById(requestId);
+    if (!teacherRequest) {
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
+
+    teacherRequest.requestStatus = "REJECTED";
+    teacherRequest.reviewedBy = adminId;
+    teacherRequest.reviewDate = new Date();
+    teacherRequest.rejectionReason = rejectionReason;
+    await teacherRequest.save();
+
+    const user = await User.findById(teacherRequest.teacherId);
+    user.approvalStatus = "REJECTED";
+    user.rejectionReason = rejectionReason;
+    await user.save();
+
+    await ActivityLog.create({
+      userId: adminId,
+      action: "TEACHER_REJECTED",
+      entityType: "TeacherRequest",
+      entityId: requestId,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Teacher request rejected",
+      data: teacherRequest,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get request status
+export const getRequestStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
+
+    const request = await TeacherRequest.findOne({ teacherId: userId });
+
+    res.status(200).json({
+      success: true,
+      approvalStatus: user.approvalStatus,
+      request: request || null,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+4. BACKEND - ROUTES
+================================================================================
+
+File: Backend/src/routes/teacherRequestRoutes.js (NEW FILE)
+
+import express from "express";
+import {
+  submitTeacherRequest,
+  getPendingRequests,
+  approvTeacher,
+  rejectTeacher,
+  getRequestStatus,
+} from "../controllers/teacherRequestController.js";
+import { protect, authorize } from "../middleware/authMiddleware.js";
+
+const router = express.Router();
+
+router.post("/submit", protect, submitTeacherRequest);
+router.get("/status/:userId", protect, getRequestStatus);
+router.get("/pending", protect, authorize("admin"), getPendingRequests);
+router.post("/approve/:requestId", protect, authorize("admin"), approvTeacher);
+router.post("/reject/:requestId", protect, authorize("admin"), rejectTeacher);
+
+export default router;
+
+
+THEN in server.js, add:
+
+import teacherRequestRoutes from "./src/routes/teacherRequestRoutes.js";
+
+app.use("/api/teacher-requests", teacherRequestRoutes);
+
+
+
+5. BACKEND - AUTH MIDDLEWARE UPDATE
+================================================================================
+
+File: Backend/src/middleware/authMiddleware.js (UPDATE protect function)
+
+Add this check inside the protect middleware after finding user:
+
+// CHECK APPROVAL STATUS FOR TEACHERS
+if (req.user.role === "teacher") {
+  if (req.user.approvalStatus === "PENDING_APPROVAL") {
+    return res.status(403).json({
+      success: false,
+      message: "Your account is pending admin approval",
+      approvalStatus: "PENDING_APPROVAL",
+    });
+  }
+
+  if (req.user.approvalStatus === "REJECTED") {
+    return res.status(403).json({
+      success: false,
+      message: `Your account was rejected. Reason: ${req.user.rejectionReason}`,
+      approvalStatus: "REJECTED",
+    });
+  }
+}
+
+
+
+6. FRONTEND - TEACHER REQUEST FORM
+================================================================================
+
+File: client/src/components/auth/TeacherRequestForm.jsx (NEW FILE)
+
+"use client";
+
+import React, { useState } from "react";
+import { api } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Loader, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+
+export const TeacherRequestForm = () => {
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    qualifications: { degree: "", specialization: "" },
+    experience: 0,
+    contact: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData((prev) => ({
+        ...prev,
+        [parent]: { ...prev[parent], [child]: value },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.qualifications.degree || !formData.contact) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post("/teacher-requests/submit", formData);
+      if (response.data.success) {
+        setSubmitted(true);
+        toast.success("Request submitted!");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-green-600">
+            <CheckCircle /> Request Submitted
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600">
+            Your request has been submitted. Admin will review and notify you.
+          </p>
+          <p className="text-xs text-gray-500 mt-4">
+            Estimated approval: 1-3 business days
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Complete Your Teacher Profile</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Degree *</label>
+            <input
+              type="text"
+              name="qualifications.degree"
+              value={formData.qualifications.degree}
+              onChange={handleChange}
+              placeholder="B.A., B.Tech, M.Ed"
+              className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Specialization</label>
+            <input
+              type="text"
+              name="qualifications.specialization"
+              value={formData.qualifications.specialization}
+              onChange={handleChange}
+              placeholder="Mathematics, Physics, English"
+              className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Experience</label>
+            <input
+              type="number"
+              name="experience"
+              value={formData.experience}
+              onChange={handleChange}
+              min="0"
+              className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Contact *</label>
+            <input
+              type="tel"
+              name="contact"
+              value={formData.contact}
+              onChange={handleChange}
+              placeholder="10-digit number"
+              className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded p-3 flex gap-2">
+            <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+            <p className="text-xs text-yellow-800">
+              Your request will be reviewed by admin.
+            </p>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700"
+          >
+            {loading ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : null}
+            {loading ? "Submitting..." : "Submit Request"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+};
+
+
+
+7. FRONTEND - ADMIN PENDING APPROVALS
+================================================================================
+
+File: client/src/pages/settings/PendingApprovals.jsx (NEW FILE)
+
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, XCircle, Loader, AlertCircle, User } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+export const PendingApprovalsAdmin = () => {
+  const { user } = useAuth();
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [approving, setApproving] = useState({});
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+
+  if (user?.role !== "admin") {
+    return (
+      <div className="p-6 bg-red-50 border border-red-200 rounded">
+        <div className="flex gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <div>
+            <p className="font-semibold text-red-800">Access Denied</p>
+            <p className="text-sm text-red-700">Only admins can access this.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/teacher-requests/pending");
+      if (response.data.success) {
+        setRequests(response.data.data || []);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch requests");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (requestId) => {
+    setApproving((prev) => ({ ...prev, [requestId]: true }));
+    try {
+      const response = await api.post(`/teacher-requests/approve/${requestId}`, {});
+      if (response.data.success) {
+        toast.success("Teacher approved!");
+        setRequests(requests.filter((r) => r._id !== requestId));
+      }
+    } catch (error) {
+      toast.error("Failed to approve");
+    } finally {
+      setApproving((prev) => ({ ...prev, [requestId]: false }));
+    }
+  };
+
+  const handleRejectClick = (request) => {
+    setSelectedRequest(request);
+    setRejectionReason("");
+    setShowRejectDialog(true);
+  };
+
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide a reason");
+      return;
+    }
+
+    setApproving((prev) => ({ ...prev, [selectedRequest._id]: true }));
+    try {
+      const response = await api.post(
+        `/teacher-requests/reject/${selectedRequest._id}`,
+        { rejectionReason }
+      );
+      if (response.data.success) {
+        toast.success("Request rejected");
+        setRequests(requests.filter((r) => r._id !== selectedRequest._id));
+        setShowRejectDialog(false);
+      }
+    } catch (error) {
+      toast.error("Failed to reject");
+    } finally {
+      setApproving((prev) => ({ ...prev, [selectedRequest._id]: false }));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader className="w-6 h-6 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">Pending Teacher Approvals</h1>
+
+      {requests.length === 0 ? (
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <p className="text-green-800">No pending requests</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {requests.map((request) => (
+            <Card key={request._id} className="border-l-4 border-l-blue-500">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      {request.teacherName}
+                    </CardTitle>
+                    <p className="text-sm text-gray-600">{request.teacherEmail}</p>
+                  </div>
+                  <div className="text-xs bg-gray-100 px-3 py-1 rounded-full">
+                    {new Date(request.submissionDate).toLocaleDateString()}
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase">Degree</p>
+                    <p className="font-semibold">
+                      {request.qualifications?.degree || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase">Specialization</p>
+                    <p className="font-semibold">
+                      {request.qualifications?.specialization || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase">Experience</p>
+                    <p className="font-semibold">
+                      {request.qualifications?.experience || 0} years
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={() => handleApprove(request._id)}
+                    disabled={approving[request._id]}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    {approving[request._id] ? (
+                      <Loader className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    Approve
+                  </Button>
+
+                  <Button
+                    onClick={() => handleRejectClick(request)}
+                    disabled={approving[request._id]}
+                    className="flex-1 bg-red-600 hover:bg-red-700"
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Teacher Request</DialogTitle>
+          </DialogHeader>
+
+          <textarea
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            placeholder="Enter rejection reason..."
+            className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-red-500 h-24"
+          />
+
+          <DialogFooter>
+            <Button onClick={() => setShowRejectDialog(false)} variant="outline">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleReject}
+              disabled={approving[selectedRequest?._id]}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {approving[selectedRequest?._id] ? (
+                <Loader className="w-4 h-4 mr-2 animate-spin" />
+              ) : null}
+              Confirm Rejection
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+
+
+8. FRONTEND - TEACHER APPROVAL STATUS PAGE
+================================================================================
+
+File: client/src/pages/auth/TeacherApprovalStatus.jsx (NEW FILE)
+
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertCircle, CheckCircle, XCircle, Loader, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export const TeacherApprovalStatus = () => {
+  const { user } = useAuth();
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchStatus = async () => {
+    try {
+      const response = await api.get(`/teacher-requests/status/${user._id}`);
+      if (response.data.success) {
+        setStatus(response.data.approvalStatus);
+      }
+    } catch (error) {
+      console.error("Failed to fetch status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  if (status === "APPROVED") {
+    return (
+      <Card className="bg-green-50 border-green-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-green-600">
+            <CheckCircle /> Account Approved!
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-green-800">Your account has been approved!</p>
+          <Button className="mt-4 bg-green-600">Go to Dashboard</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (status === "REJECTED") {
+    return (
+      <Card className="bg-red-50 border-red-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-600">
+            <XCircle /> Request Not Approved
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-800">
+            Your request was rejected. Contact admin for details.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-blue-50 border-blue-200">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-blue-600">
+          <Clock /> Awaiting Approval
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="bg-white border rounded p-4 space-y-2">
+          <p className="text-sm text-gray-600">
+            <strong>Status:</strong> Pending Review
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Wait Time:</strong> 1-3 business days
+          </p>
+        </div>
+        <p className="text-xs text-gray-500">Auto-refreshes every 30 seconds</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+
+
+9. ROUTES SETUP
+================================================================================
+
+File: client/src/pages/routes/Router.jsx (ADD THESE ROUTES)
+
+import { TeacherRequestForm } from "@/components/auth/TeacherRequestForm";
+import { PendingApprovalsAdmin } from "@/pages/settings/PendingApprovals";
+import { TeacherApprovalStatus } from "@/pages/auth/TeacherApprovalStatus";
+
+// Add to your route configuration:
+
+{
+  path: "/teacher-request",
+  element: <TeacherRequestForm />,
+},
+{
+  path: "/approval-status",
+  element: <TeacherApprovalStatus />,
+},
+{
+  path: "/settings/pending-approvals",
+  element: <PendingApprovalsAdmin />,
+},
+
+
+
+10. API EXAMPLES
+================================================================================
+
+SUBMIT REQUEST:
+POST /api/teacher-requests/submit
+{
+  "qualifications": {
+    "degree": "B.A.",
+    "specialization": "Mathematics"
+  },
+  "experience": 5,
+  "contact": "9876543210"
+}
+
+Response:
+{
+  "success": true,
+  "message": "Teacher request submitted successfully",
+  "request": { ... }
+}
+
+
+GET PENDING REQUESTS:
+GET /api/teacher-requests/pending?page=1&limit=10
+
+Response:
+{
+  "success": true,
+  "count": 3,
+  "total": 5,
+  "page": 1,
+  "data": [ ... ]
+}
+
+
+APPROVE TEACHER:
+POST /api/teacher-requests/approve/605c72ef1a1234567890abcd
+{}
+
+Response:
+{
+  "success": true,
+  "message": "Teacher approved successfully",
+  "data": { ... }
+}
+
+
+REJECT TEACHER:
+POST /api/teacher-requests/reject/605c72ef1a1234567890abcd
+{
+  "rejectionReason": "Qualifications do not meet requirements"
+}
+
+Response:
+{
+  "success": true,
+  "message": "Teacher request rejected",
+  "data": { ... }
+}
+
+
+GET REQUEST STATUS:
+GET /api/teacher-requests/status/505c72ef1a1234567890aaa
+
+Response:
+{
+  "success": true,
+  "approvalStatus": "PENDING_APPROVAL",
+  "request": { ... }
+}
+
+
+================================================================================
+                          INTEGRATION STEPS
+================================================================================
+
+1. BACKEND:
+   ☐ Update Backend/src/models/user.js with new fields
+   ☐ Create Backend/src/models/teacherRequest.js
+   ☐ Create Backend/src/controllers/teacherRequestController.js
+   ☐ Create Backend/src/routes/teacherRequestRoutes.js
+   ☐ Update Backend/src/middleware/authMiddleware.js
+   ☐ Add route to Backend/server.js
+   ☐ Test with Postman
+
+2. FRONTEND:
+   ☐ Create client/src/components/auth/TeacherRequestForm.jsx
+   ☐ Create client/src/pages/settings/PendingApprovals.jsx
+   ☐ Create client/src/pages/auth/TeacherApprovalStatus.jsx
+   ☐ Add routes to Router.jsx
+   ☐ Test with npm run dev
+
+3. WORKFLOW:
+   ☐ Test teacher registration flow
+   ☐ Test admin approval/rejection
+   ☐ Test pending teacher blocking
+   ☐ Test notification system
+
+================================================================================

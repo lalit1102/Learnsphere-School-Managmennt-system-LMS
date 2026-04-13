@@ -1,0 +1,361 @@
+/**
+ * ROLE-BASED ACCESS CONTROL (RBAC) - QUICK REFERENCE
+ * ====================================================
+ * 
+ * Three user roles with different permissions:
+ * ADMIN | TEACHER | STUDENT
+ */
+
+/**
+ * ============================================
+ * FILES CREATED / MODIFIED
+ * ============================================
+ */
+
+// ✅ NEW: Backend/src/constants/roles.js
+//    - ROLES: admin, teacher, student, parent
+//    - ROLE_HIERARCHY: who can manage whom
+//    - ROLE_PERMISSIONS: what each role can do
+//    - hasPermission() utility function
+
+// ✅ UPDATED: Backend/src/middleware/authMiddleware.js
+//    - protect: Verify JWT token
+//    - authorize(roles[]): Check user role
+//    - adminOnly: Shorthand for admin only
+//    - teacherOrAdmin: Shorthand for admin or teacher
+//    - checkPermission(permission): Check specific permission
+//    - checkTeacherOwnership: Verify teacher owns class
+//    - checkOwnership: Verify user viewing own data
+
+// ✅ NEW: Backend/src/routes/teacherAdvancedRoutes.js
+//    - Administrative routes (create, update, delete teachers)
+//    - Teacher-specific routes (attendance, exams, students)
+//    - Comprehensive middleware examples
+
+// ✅ NEW: Backend/src/routes/studentRoutes.js
+//    - Student CRUD operations (admin only)
+//    - Student data views (student can see own only)
+//    - Permission checks with @access annotations
+
+// ✅ NEW: Client/src/components/auth/RoleBasedUI.jsx
+//    - useShowFor(): Hook for visibility flags
+//    - RoleGuard: Component wrapper for role-based access
+//    - RoleButton: Button that only shows for specific roles
+//    - ShowIfRole: Render component for single role
+//    - ComprehensiveDashboard: Full example with all roles
+//    - UserManagementToolbar: Practical example
+
+// ✅ NEW: Backend/src/RBAC_IMPLEMENTATION_GUIDE.jsx
+//    - Complete implementation guide
+//    - Pattern examples
+//    - Security best practices
+//    - Testing checklist
+//    - Common mistakes
+
+// ✅ NEW: Backend/src/EXAMPLE_CONTROLLERS.js
+//    - Example controller implementations
+//    - Proper authorization checks
+//    - Controller-level validation
+//    - Logging examples
+
+/**
+ * ============================================
+ * THREE ROLES & PERMISSIONS
+ * ============================================
+ */
+
+// ===== ADMIN =====
+ADMIN CAN:
+✓ Add/Update/Delete teachers
+✓ Add/Update/Delete students
+✓ View all classes, teachers, students
+✓ Manage settings
+✓ View all reports and data
+✓ Manage academic years
+✓ Access everything
+
+ADMIN CANNOT:
+✗ Nothing (full access)
+
+FRONTEND: Shows "Admin Dashboard"
+ROUTES: /api/teachers (all), /api/students (all), /api/settings
+
+// ===== TEACHER =====
+TEACHER CAN:
+✓ View assigned classes
+✓ View students in their classes
+✓ Take attendance
+✓ Create assignments and exams
+✓ Grade students
+✓ View class reports
+
+TEACHER CANNOT:
+✗ Add/Update/Delete other teachers
+✗ Add/Update/Delete students
+✗ Manage system settings
+✗ Access other teacher's classes
+✗ Delete exams/assignments
+
+FRONTEND: Shows "Teacher Dashboard"
+ROUTES: /api/teachers/classes, /api/students (own only), /api/attendance (own)
+
+// ===== STUDENT =====
+STUDENT CAN:
+✓ View own dashboard
+✓ See own attendance
+✓ View own assignments
+✓ View own exams and grades
+✓ View own timetable
+✓ Submit assignments
+
+STUDENT CANNOT:
+✗ Add/Manage any users
+✗ Take attendance
+✗ Create exams
+✗ View other student's data
+✗ Change settings
+✗ Delete anything
+
+FRONTEND: Shows "Student Dashboard"
+ROUTES: /api/students/:ownId (self only), /api/attendance (own)
+
+/**
+ * ============================================
+ * BACKEND ROUTE PATTERNS
+ * ============================================
+ */
+
+// PATTERN 1: Admin Only
+router.post('/admin/action', protect, authorize(['admin']), handler);
+// Only admins can POST
+
+// PATTERN 2: Admin OR Teacher
+router.get('/classes', protect, authorize(['admin', 'teacher']), handler);
+// Both admins and teachers can GET /classes
+// But teachers see only their classes (checked in controller)
+
+// PATTERN 3: Admin OR Teacher OR Student
+router.get('/dashboard', protect, authorize(['admin', 'teacher', 'student']), handler);
+// Anyone can see their own dashboard
+// Students see own dashboard, teachers see class dashboard, admins see system dashboard
+
+// PATTERN 4: With Permission Check
+router.post('/exam', protect, checkPermission('createExam'), handler);
+// Based on role-based permissions, not just role
+
+// PATTERN 5: With Ownership Check
+router.get('/profile/:id', protect, authorize(['admin', 'student']), checkOwnership, handler);
+// Admin can see any profile
+// Student can only see their own profile (checkOwnership validates this)
+
+/**
+ * ============================================
+ * FRONTEND USAGE EXAMPLES
+ * ============================================
+ */
+
+// PATTERN 1: useShowFor Hook (RECOMMENDED)
+const { admin, teacher, student, teacherOrAdmin } = useShowFor();
+{admin && <AdminPanel />}
+{teacher && <TeacherPanel />}
+{student && <StudentPanel />}
+
+// PATTERN 2: RoleGuard Component
+<RoleGuard allowedRoles={['admin', 'teacher']}>
+  <SensitiveFeature />
+</RoleGuard>
+
+// PATTERN 3: RoleButton Component
+<RoleButton roles={['admin']} onClick={handleClick}>
+  Add Teacher
+</RoleButton>
+
+// PATTERN 4: ShowIfRole Component
+<ShowIfRole role="admin">
+  <AdminOnly />
+</ShowIfRole>
+
+// PATTERN 5: useAuth Hook (Direct)
+const { user } = useAuth();
+if (user?.role === 'admin') {
+  // Custom logic
+}
+
+/**
+ * ============================================
+ * ERROR RESPONSES
+ * ============================================
+ */
+
+// 401 Unauthorized (No token or invalid token)
+{
+  "success": false,
+  "message": "Not authorized, no token provided"
+}
+
+// 403 Forbidden (User doesn't have permission)
+{
+  "success": false,
+  "message": "Access denied. Your role 'student' is not authorized for this action.",
+  "userRole": "student",
+  "requiredRoles": ["admin", "teacher"]
+}
+
+// 403 Forbidden (Specific permission denied)
+{
+  "success": false,
+  "message": "Permission denied. You don't have 'createExam' permission.",
+  "userRole": "student",
+  "requiredPermission": "createExam"
+}
+
+/**
+ * ============================================
+ * QUICK START IMPLEMENTATION
+ * ============================================
+ */
+
+// STEP 1: Backend - Protect your routes
+// In existing routes (e.g., userRoutes.js):
+router.post(
+  '/register',
+  protect,
+  authorize(['admin']), // Changed from authorize(['admin', 'teacher'])
+  register
+);
+
+// STEP 2: Frontend - Use useShowFor
+import { useShowFor } from '@/components/auth/RoleBasedUI';
+
+export function Dashboard() {
+  const { admin, teacher, student } = useShowFor();
+  
+  return (
+    <>
+      {admin && <AdminDashboard />}
+      {teacher && <TeacherDashboard />}
+      {student && <StudentDashboard />}
+    </>
+  );
+}
+
+// STEP 3: Test
+// Login as admin  → See admin features
+// Login as teacher → See teacher features, no admin options
+// Login as student → See student features only
+
+/**
+ * ============================================
+ * INTEGRATION CHECKLIST
+ * ============================================
+ */
+
+// Add to server.js:
+// [ ] import teacherAdvancedRoutes from './src/routes/teacherAdvancedRoutes.js';
+// [ ] import studentRoutes from './src/routes/studentRoutes.js';
+// [ ] app.use('/api/teachers', teacherAdvancedRoutes);
+// [ ] app.use('/api/students', studentRoutes);
+
+// Update existing controllers:
+// [ ] Add protect + authorize to existingRoutes
+// [ ] Verify all DELETE routes use adminOnly
+// [ ] Add role checks to POST/PATCH routes
+
+// Frontend components:
+// [ ] Import useShowFor in Dashboard.jsx
+// [ ] Use {admin && ...} patterns
+// [ ] Replace all student views in existing components
+// [ ] Hide admin buttons for non-admins
+
+// Testing:
+// [ ] Test each route with token of each role
+// [ ] Verify 403 errors for unauthorized
+// [ ] Verify frontend hides buttons properly
+// [ ] Check browser console for errors
+// [ ] Test ownership checks work
+
+/**
+ * ============================================
+ * COMMON ROLE COMBINATIONS IN AUTHORIZATION
+ * ============================================
+ */
+
+// View Routes (Read-Only)
+authorize(['admin', 'teacher', 'student']) // Everyone
+authorize(['admin', 'teacher'])             // Admin & Teacher
+authorize(['admin'])                        // Admin Only
+
+// Create Routes
+authorize(['admin', 'teacher'])             // Can create (exams, assignments)
+authorize(['admin'])                        // Can create only (users, settings)
+
+// Delete Routes
+authorize(['admin'])                        // Admin Only (ALWAYS)
+
+// Data Access Routes
+authorize(['admin', 'student']) + checkOwnership  // View own data
+authorize(['admin', 'teacher', 'student'])        // View class data
+
+/**
+ * ============================================
+ * SECURITY PRINCIPLES
+ * ============================================
+ */
+
+✓ Always protect backend first (frontend is cosmetic)
+✓ Use 403 for forbidden, 401 for unauthorized
+✓ Check role AND ownership for user data
+✓ Log all access denials
+✓ Never trust frontend role information
+✓ Validate permissions in controller (not just route)
+✓ Use specific roles, not generic flags
+✓ Protect all DELETE operations with adminOnly
+✓ Return least sensitive error messages
+✓ Test each role's access patterns
+
+/**
+ * ============================================
+ * WHERE TO ADD THIS TO YOUR PROJECT
+ * ============================================
+ */
+
+Backend:
+├── src/
+│   ├── constants/
+│   │   └── roles.js          // ✅ NEW
+│   ├── middleware/
+│   │   └── authMiddleware.js   // ✅ UPDATED
+│   ├── routes/
+│   │   ├── teacherAdvancedRoutes.js  // ✅ NEW
+│   │   ├── studentRoutes.js          // ✅ NEW
+│   │   └── userRoutes.js             // EXISTING - update queries
+│   └── controllers/
+│       └── userController.js   // EXISTING - update functions
+
+Frontend:
+├── src/components/auth/
+│   └── RoleBasedUI.jsx        // ✅ NEW
+└── src/pages/
+    └── Dashboard.jsx          // Update to use RoleBasedUI
+
+Documentation:
+├── RBAC_IMPLEMENTATION_GUIDE.jsx  // ✅ NEW
+└── EXAMPLE_CONTROLLERS.js         // ✅ NEW
+
+/**
+ * ============================================
+ * NEXT STEPS
+ * ============================================
+ */
+
+1. Import RoleBasedUI in your main components
+2. Add protect + authorize to existing routes
+3. Test each route with different roles
+4. Update Dashboard to show role-based UI
+5. Hide admin/teacher buttons for students
+6. Add useShowFor hook to all components
+7. Implement controller-level checks from EXAMPLE_CONTROLLERS.js
+8. Test all error scenarios
+9. Document role requirements for team
+
+export default "For more examples, see EXAMPLE_CONTROLLERS.js and RBAC_IMPLEMENTATION_GUIDE.jsx";
